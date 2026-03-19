@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
@@ -6,171 +7,128 @@ public class PlayerController : MonoBehaviour
 {
     [Header("Input Actions")]
     [SerializeField] private InputActionAsset moveAction;
+    [SerializeField] private string keyboardActionMapName = "Keyboard";
+    [SerializeField] private string controllerActionMapName = "Controller";
 
+    [Header("Movement")]
     [SerializeField] private float walkSpeed = 5f;
-    [SerializeField] private float referenceWalkSpeed = 5f;
+    [SerializeField] private float sprintSpeed = 8f;
+    [SerializeField] private float turnAngle = 90f;
     [SerializeField] private float rotationSpeed = 180f;
     [SerializeField] private bool smoothRotation;
 
+    [Header("Animator")]
+    [SerializeField, Range(0f, 1f)] private float sprintThreshold = 0.5f;
+
     private const string moveForwardActionName = "MoveForward";
     private const string turnActionName = "Turn";
+    private const string controllerMoveActionName = "Moving";
+    private const string sprintActionName = "Sprint";
 
-    private const float turnAngle = 90f;
     private const float gravity = -9.81f;
 
     private CharacterController characterController;
-    private InputAction moveForwardInputAction;
-    private InputAction turnInputAction;
     private Animator animator;
+    private PlayerInputHandler inputHandler;
+    private PlayerMotor playerMotor;
 
-    private Quaternion targetRotation;
-    private bool isTurning;
-    private float previousTurnInput;
-    private float previousForwardInput;
-    private float verticalVelocity;
+    private bool previousUsingControllerInput;
 
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
-        targetRotation = transform.rotation;
 
-        if (moveAction != null)
-        {
-            moveForwardInputAction = moveAction.FindAction(moveForwardActionName, true);
-            turnInputAction = moveAction.FindAction(turnActionName, true);
-        }
+        inputHandler = new PlayerInputHandler(
+            moveAction,
+            keyboardActionMapName,
+            controllerActionMapName,
+            moveForwardActionName,
+            turnActionName,
+            controllerMoveActionName,
+            sprintActionName);
+
+        playerMotor = new PlayerMotor(characterController, transform, turnAngle);
+        previousUsingControllerInput = inputHandler.UsingControllerInput;
     }
 
     private void OnEnable()
     {
-        moveForwardInputAction?.Enable();
-        turnInputAction?.Enable();
+        inputHandler.Enable();
     }
 
     private void OnDisable()
     {
-        moveForwardInputAction?.Disable();
-        turnInputAction?.Disable();
+        inputHandler.Disable();
     }
 
     private void Update()
     {
-        MoveControl();
-        RotateControl();
-        AnimationSync();
-    }
+        inputHandler.UpdateInputState();
 
-    private void MoveControl()
-    {
-        if (moveForwardInputAction == null)
+        if (inputHandler.UsingControllerInput != previousUsingControllerInput)
         {
-            return;
+            playerMotor.ResetInputState();
+            previousUsingControllerInput = inputHandler.UsingControllerInput;
         }
 
-        float forwardInput = moveForwardInputAction.ReadValue<float>();
+        float moveSpeed = inputHandler.IsSprinting ? sprintSpeed : walkSpeed;
 
-        if (forwardInput < -0.5f && previousForwardInput >= -0.5f)
+        if (inputHandler.UsingControllerInput)
         {
-            targetRotation = transform.rotation * Quaternion.Euler(0f, 180f, 0f);
-            isTurning = true;
-            forwardInput = 0f;
-        }
+            playerMotor.Move(
+                inputHandler.MoveInput,
+                moveSpeed,
+                gravity,
+                Time.deltaTime);
 
-        previousForwardInput = forwardInput;
-
-        Vector3 localForward = transform.localRotation * Vector3.forward;
-        Vector3 move = localForward * forwardInput;
-
-        if (characterController.isGrounded && verticalVelocity < 0f)
-        {
-            verticalVelocity = -2f;
-        }
-
-        verticalVelocity += gravity * Time.deltaTime;
-
-        Vector3 velocity = move * walkSpeed;
-        velocity.y = verticalVelocity;
-
-        characterController.Move(velocity * Time.deltaTime);
-    }
-
-    private void RotateControl()
-    {
-        if (isTurning)
-        {
-            transform.rotation = Quaternion.RotateTowards(
-                transform.rotation,
-                targetRotation,
-                rotationSpeed * Time.deltaTime);
-
-            if (Quaternion.Angle(transform.rotation, targetRotation) <= 0.01f)
-            {
-                transform.rotation = targetRotation;
-                isTurning = false;
-            }
-
-            return;
-        }
-
-        if (turnInputAction == null)
-        {
-            return;
-        }
-
-        float turnInput = turnInputAction.ReadValue<float>();
-
-        if (smoothRotation)
-        {
-            Quaternion targetRotation =
-                transform.rotation * Quaternion.Euler(0f, turnInput * rotationSpeed * Time.deltaTime, 0f);
-
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                targetRotation,
-                rotationSpeed * Time.deltaTime);
+            playerMotor.Rotate(
+                inputHandler.MoveInputVector,
+                rotationSpeed,
+                smoothRotation,
+                Time.deltaTime);
         }
         else
         {
-            if (!isTurning &&
-                Mathf.Abs(turnInput) > 0.01f &&
-                Mathf.Abs(previousTurnInput) <= 0.01f)
-            {
-                float turnDirection = Mathf.Sign(turnInput);
-                targetRotation = transform.rotation * Quaternion.Euler(0f, turnDirection * turnAngle, 0f);
-                isTurning = true;
-            }
+            playerMotor.Move(
+                inputHandler.MoveInput,
+                moveSpeed,
+                gravity,
+                Time.deltaTime);
 
-            if (isTurning)
-            {
-                transform.rotation = Quaternion.RotateTowards(
-                    transform.rotation,
-                    targetRotation,
-                    rotationSpeed * Time.deltaTime);
-
-                if (Quaternion.Angle(transform.rotation, targetRotation) <= 0.01f)
-                {
-                    transform.rotation = targetRotation;
-                    isTurning = false;
-                }
-            }
-
-            previousTurnInput = turnInput;
+            playerMotor.Rotate(
+                inputHandler.TurnInput,
+                rotationSpeed,
+                smoothRotation,
+                Time.deltaTime);
         }
+
+        UpdateAnimator(moveSpeed);
     }
 
-    private void AnimationSync()
+    private void UpdateAnimator(float moveSpeed)
     {
-        if (moveForwardInputAction == null)
+        if (animator == null)
         {
             return;
         }
 
-        float forwardInput = moveForwardInputAction.ReadValue<float>();
-        float currentSpeed = walkSpeed * Mathf.Abs(forwardInput);
-        float speedRatio = currentSpeed / referenceWalkSpeed;
+        float inputAmount = Mathf.Clamp01(Mathf.Abs(inputHandler.MoveInput));
 
-        animator.SetFloat("Speed", speedRatio);
-        animator.speed = Mathf.Max(speedRatio, 0.1f);
+        float normalizedSpeed;
+        if (inputAmount <= 0f)
+        {
+            normalizedSpeed = 0f;
+        }
+        else if (inputHandler.IsSprinting)
+        {
+            normalizedSpeed = Mathf.Lerp(sprintThreshold, 1f, inputAmount);
+        }
+        else
+        {
+            normalizedSpeed = Mathf.Lerp(0f, sprintThreshold, inputAmount);
+        }
+
+        animator.SetFloat("Speed", normalizedSpeed);
     }
 }

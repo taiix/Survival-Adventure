@@ -38,17 +38,6 @@
                     "isPartOfComposite": false
                 },
                 {
-                    "name": "Negative",
-                    "id": "12f3d830-7e78-4b5b-b4ab-5956ee5e1e78",
-                    "path": "<Keyboard>/s",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "MoveForward",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
                     "name": "Positive",
                     "id": "ffe86921-6245-464a-ab8b-49d847002283",
                     "path": "<Keyboard>/w",
@@ -91,6 +80,74 @@
                     "action": "Turn",
                     "isComposite": false,
                     "isPartOfComposite": true
+                }
+            ]
+        },
+        {
+            "name": "Controller",
+            "id": "ce9a45fb-c5a5-4ab1-8121-dd73c503e8a2",
+            "actions": [
+                {
+                    "name": "Moving",
+                    "type": "Value",
+                    "id": "1ea9c5bf-3aac-4770-bef8-89ddc9087ef4",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Attack",
+                    "type": "Button",
+                    "id": "8fd7a67e-18cc-441f-a641-dfb75642de10",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Sprint",
+                    "type": "Button",
+                    "id": "de4c2e57-4af3-4ab0-a2d5-1ac29f187907",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "77095f54-da66-402a-aa68-1788a5022523",
+                    "path": "<Gamepad>/leftStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Moving",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "3d9262de-2a7c-4ff0-be0c-267e835703b6",
+                    "path": "<Gamepad>/buttonSouth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Attack",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "aa31bded-d376-4c7b-b655-475edbf54da1",
+                    "path": "<Gamepad>/buttonWest",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Sprint",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         }
