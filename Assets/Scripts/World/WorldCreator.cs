@@ -7,6 +7,7 @@ public class WorldCreator : MonoBehaviour
     [SerializeField] private GameObject[] grassObjects;
     [SerializeField] private GameObject[] treeObjects;
     [SerializeField] private GameObject[] topObjects;
+    [SerializeField] private GameObject[] collectibleObjects;
 
     [Header("World Settings")]
     [SerializeField, Min(1)] private int worldWidth = 32;
@@ -20,20 +21,24 @@ public class WorldCreator : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float grassChance = 0.35f;
     [SerializeField, Range(0f, 1f)] private float treeChance = 0.15f;
     [SerializeField, Range(0f, 1f)] private float topChance = 0.08f;
+    [SerializeField, Range(0f, 1f)] private float collectibleChance = 0.05f;
 
     [Header("Spawn Offsets")]
     [SerializeField, Min(0f)] private float landYOffset = 0f;
     [SerializeField, Min(0f)] private float grassYOffset = 0.05f;
     [SerializeField, Min(0f)] private float treeYOffset = 0.5f;
     [SerializeField, Min(0f)] private float topYOffset = 0.5f;
+    [SerializeField, Min(0f)] private float collectibleYOffset = 0.5f;
     [SerializeField, Min(0f)] private float grassTileOffset = 0.35f;
     [SerializeField, Min(0f)] private float treeTileOffset = 0.25f;
+    [SerializeField, Min(0f)] private float collectibleTileOffset = 0.3f;
 
     [Header("World Parents")]
     [SerializeField] private Transform landParent;
     [SerializeField] private Transform grassParent;
     [SerializeField] private Transform treeParent;
     [SerializeField] private Transform topParent;
+    [SerializeField] private Transform collectibleParent;
 
     private readonly HashSet<Vector2Int> occupiedDecorativeCells = new HashSet<Vector2Int>();
 
@@ -105,6 +110,16 @@ public class WorldCreator : MonoBehaviour
                         treeTileOffset,
                         treeYOffset,
                         true);
+
+                    TrySpawnDecorativePrefab(
+                        collectibleObjects,
+                        cell,
+                        basePosition,
+                        collectibleParent,
+                        collectibleChance,
+                        collectibleTileOffset,
+                        collectibleYOffset,
+                        false);
                 }
             }
         }
@@ -131,6 +146,7 @@ public class WorldCreator : MonoBehaviour
         grassParent = null;
         treeParent = null;
         topParent = null;
+        collectibleParent = null;
         occupiedDecorativeCells.Clear();
     }
 
@@ -171,6 +187,11 @@ public class WorldCreator : MonoBehaviour
         if (topParent == null)
         {
             topParent = CreateParent("Top");
+        }
+
+        if (collectibleParent == null)
+        {
+            collectibleParent = CreateParent("Collectibles");
         }
     }
 

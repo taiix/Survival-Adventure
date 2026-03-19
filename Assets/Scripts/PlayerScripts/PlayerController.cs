@@ -31,6 +31,7 @@ public class PlayerController : MonoBehaviour
     private Animator animator;
     private PlayerInputHandler inputHandler;
     private PlayerMotor playerMotor;
+    private PlayerStamina playerStamina;
 
     private bool previousUsingControllerInput;
 
@@ -49,6 +50,7 @@ public class PlayerController : MonoBehaviour
             sprintActionName);
 
         playerMotor = new PlayerMotor(characterController, transform, turnAngle);
+        playerStamina = GetComponent<PlayerStamina>();
         previousUsingControllerInput = inputHandler.UsingControllerInput;
     }
 
@@ -72,7 +74,12 @@ public class PlayerController : MonoBehaviour
             previousUsingControllerInput = inputHandler.UsingControllerInput;
         }
 
-        float moveSpeed = inputHandler.IsSprinting ? sprintSpeed : walkSpeed;
+        bool isSprinting = inputHandler.IsSprinting && (playerStamina == null || playerStamina.HasStamina);
+        if (isSprinting && playerStamina != null)
+        {
+            playerStamina.UseStamina(Time.deltaTime);
+        }
+        float moveSpeed = isSprinting ? sprintSpeed : walkSpeed;
 
         if (inputHandler.UsingControllerInput)
         {
@@ -103,10 +110,10 @@ public class PlayerController : MonoBehaviour
                 Time.deltaTime);
         }
 
-        UpdateAnimator(moveSpeed);
+        UpdateAnimator(moveSpeed, isSprinting);
     }
 
-    private void UpdateAnimator(float moveSpeed)
+    private void UpdateAnimator(float moveSpeed, bool isSprinting)
     {
         if (animator == null)
         {
@@ -120,7 +127,7 @@ public class PlayerController : MonoBehaviour
         {
             normalizedSpeed = 0f;
         }
-        else if (inputHandler.IsSprinting)
+        else if (isSprinting)
         {
             normalizedSpeed = Mathf.Lerp(sprintThreshold, 1f, inputAmount);
         }
