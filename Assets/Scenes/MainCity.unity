@@ -3704,16 +3704,9 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4583416083232146415, guid: 2756cdb6724f3ec41a029e33424f722c, type: 3}
-      propertyPath: m_Name
-      value: UI
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 6367145455174655360, guid: 2756cdb6724f3ec41a029e33424f722c, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1783098396}
+    m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2756cdb6724f3ec41a029e33424f722c, type: 3}
 --- !u!1 &81075684
@@ -25114,11 +25107,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 689518831}
   m_Mesh: {fileID: 7173512971136745302, guid: eb42c75010f120f4e9240ea9fa65ca13, type: 3}
---- !u!4 &701182291 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6367145455174655360, guid: 2756cdb6724f3ec41a029e33424f722c, type: 3}
-  m_PrefabInstance: {fileID: 80816914}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &702605640
 GameObject:
   m_ObjectHideFlags: 0
@@ -66051,13 +66039,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1783098395}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0, y: -0.29249617, z: -0, w: 0.9562667}
+  m_LocalPosition: {x: 2.307128, y: 0.673, z: 1.3985382}
+  m_LocalScale: {x: 0.19695002, y: 0.19695, z: 0.19695002}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 701182291}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -34.015, z: 0}
 --- !u!114 &1783098397
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -66075,11 +66063,11 @@ MonoBehaviour:
   sourceAsset: {fileID: 9197481963319205126, guid: e0e0b4196c97713429e72810f2df4681, type: 3}
   m_SortingOrder: 0
   m_Position: 0
-  m_WorldSpaceSizeMode: 1
+  m_WorldSpaceSizeMode: 0
   m_WorldSpaceWidth: 1920
   m_WorldSpaceHeight: 1080
   m_PivotReferenceSize: 0
-  m_Pivot: 0
+  m_Pivot: 7
   m_WorldSpaceCollider: {fileID: 0}
 --- !u!1 &1783850481
 GameObject:
@@ -80291,5 +80279,6 @@ SceneRoots:
   - {fileID: 1746658648}
   - {fileID: 1014132849}
   - {fileID: 1783850482}
+  - {fileID: 1783098396}
   - {fileID: 80816914}
   - {fileID: 1112705027}
