@@ -41,6 +41,10 @@ public class WorldCreator : MonoBehaviour
     [SerializeField] private Transform collectibleParent;
 
     private readonly HashSet<Vector2Int> occupiedDecorativeCells = new HashSet<Vector2Int>();
+    private readonly List<Vector3> waterTilePositions = new List<Vector3>();
+
+    /// <summary>World-space centre positions of every tile that is classified as water.</summary>
+    public IReadOnlyList<Vector3> WaterTilePositions => waterTilePositions;
 
     private void Start()
     {
@@ -76,6 +80,7 @@ public class WorldCreator : MonoBehaviour
 
                 if (height < lowThreshold)
                 {
+                    waterTilePositions.Add(new Vector3(x * tileSize, 0f, y * tileSize));
                     continue;
                 }
 
@@ -148,6 +153,7 @@ public class WorldCreator : MonoBehaviour
         topParent = null;
         collectibleParent = null;
         occupiedDecorativeCells.Clear();
+        waterTilePositions.Clear();
     }
 
     private float[,] GenerateHeightMap(float offsetX, float offsetY)
