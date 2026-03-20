@@ -88,8 +88,8 @@ public sealed class PlayerMotor
     {
         Vector3 direction = new Vector3(moveInput.x, 0f, moveInput.y);
         if (moveInput.sqrMagnitude > 0.01f && direction.sqrMagnitude > 0.1f)
-            playerTransform.localRotation =
-                Quaternion.LookRotation(direction, Vector3.up);
-            Debug.Log(moveInput);
+        {
+            playerTransform.localRotation = Quaternion.LookRotation(direction, Vector3.up);
+        }
     }
 }
