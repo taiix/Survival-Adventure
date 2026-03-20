@@ -20,6 +20,18 @@ public sealed class PlayerController : MonoBehaviour
     [Header("Animator")]
     [SerializeField, Range(0f, 1f)] private float sprintThreshold = 0.5f;
 
+    [Header("Stamina")]
+    [SerializeField, Min(1f)] private float maxStamina = 100f;
+    [SerializeField, Min(0.1f)] private float staminaDrainRate = 20f;
+    [SerializeField, Min(0.1f)] private float staminaRegenRate = 10f;
+    [SerializeField, Min(0f)] private float staminaRegenDelay = 1.5f;
+
+    [Header("Water Detectiom")]
+    [SerializeField] private float sphereDistance;
+    [SerializeField] private float sphereYOffset;
+    [SerializeField] private float sphereRadius;
+    [SerializeField] private float raycastDistance;
+
     private const string moveForwardActionName = "MoveForward";
     private const string turnActionName = "Turn";
     private const string controllerMoveActionName = "Moving";
@@ -33,24 +45,45 @@ public sealed class PlayerController : MonoBehaviour
     private PlayerStamina playerStamina;
     private PlayerAttack playerAttack;
     private PlayerWaterDetection playerWaterDetection;
+
     private bool previousUsingControllerInput;
     private bool previousAttackPressed;
 
     private void Awake()
     {
-        InitializeComponents();
-        InitializeSystems();
+        characterController = GetComponent<CharacterController>();
+        animator = GetComponent<Animator>();
+        playerAttack = GetComponent<PlayerAttack>();
+
+        playerStamina = new PlayerStamina(
+            maxStamina,
+            staminaDrainRate,
+            staminaRegenRate,
+            staminaRegenDelay);
+
+        inputHandler = new PlayerInputHandler(
+            moveAction,
+            keyboardActionMapName,
+            controllerActionMapName,
+            moveForwardActionName,
+            turnActionName,
+            controllerMoveActionName,
+            sprintActionName);
+
+        playerMotor = new PlayerMotor(characterController, transform, turnAngle);
+
+        playerWaterDetection = new PlayerWaterDetection(
+            sphereDistance,
+            sphereYOffset,
+            sphereRadius,
+            raycastDistance);
+
+        previousUsingControllerInput = inputHandler.UsingControllerInput;
     }
 
-    private void OnEnable()
-    {
-        inputHandler.Enable();
-    }
+    private void OnEnable() => inputHandler?.Enable();
 
-    private void OnDisable()
-    {
-        inputHandler.Disable();
-    }
+    private void OnDisable() => inputHandler?.Disable();
 
     private void Update()
     {
@@ -62,30 +95,8 @@ public sealed class PlayerController : MonoBehaviour
 
         HandleMovement(moveSpeed);
         AttackControl();
+        playerStamina.Update(Time.deltaTime);
         UpdateAnimator(isSprinting);
-    }
-
-    private void InitializeComponents()
-    {
-        characterController = GetComponent<CharacterController>();
-        animator = GetComponent<Animator>();
-        playerStamina = GetComponent<PlayerStamina>();
-        playerAttack = GetComponent<PlayerAttack>();
-    }
-
-    private void InitializeSystems()
-    {
-        inputHandler = new PlayerInputHandler(
-            moveAction,
-            keyboardActionMapName,
-            controllerActionMapName,
-            moveForwardActionName,
-            turnActionName,
-            controllerMoveActionName,
-            sprintActionName);
-
-        playerMotor = new PlayerMotor(characterController, transform, turnAngle);
-        previousUsingControllerInput = inputHandler.UsingControllerInput;
     }
 
     private void HandleInputModeSwitch()
@@ -101,8 +112,9 @@ public sealed class PlayerController : MonoBehaviour
 
     private bool ResolveSprintState()
     {
-        bool isSprinting = inputHandler.IsSprinting && (playerStamina == null || playerStamina.HasStamina);
-        if (isSprinting && playerStamina != null)
+        bool isSprinting = inputHandler.IsSprinting && playerStamina.HasStamina;
+
+        if (isSprinting)
         {
             playerStamina.UseStamina(Time.deltaTime);
         }
@@ -112,14 +124,19 @@ public sealed class PlayerController : MonoBehaviour
 
     private void HandleMovement(float moveSpeed)
     {
-        if (inputHandler.IsAttacking) return;
+        if (inputHandler.IsAttacking)
+        {
+            return;
+        }
 
-       //if()
+        if (!playerWaterDetection.IsDetectingWater(this.transform))
+        {
             playerMotor.Move(
             inputHandler.MoveInput,
             moveSpeed,
             gravity,
             Time.deltaTime);
+        }
 
         if (inputHandler.UsingControllerInput)
         {
@@ -175,6 +192,17 @@ public sealed class PlayerController : MonoBehaviour
         }
 
         animator.SetFloat("Speed", normalizedSpeed);
+    }
+
+    private void OnDrawGizmos()
+    {
+        Vector3 spherePosition =
+            transform.position +
+            transform.forward * sphereDistance +
+            Vector3.up * sphereYOffset;
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(spherePosition, sphereRadius);
+        Gizmos.DrawLine(spherePosition, spherePosition + Vector3.down * raycastDistance);
     }
 }
 

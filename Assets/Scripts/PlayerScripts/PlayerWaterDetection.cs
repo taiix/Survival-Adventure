@@ -1,36 +1,37 @@
 using UnityEngine;
 
-public class PlayerWaterDetection : MonoBehaviour
+public sealed class PlayerWaterDetection
 {
-    [SerializeField] private float sphereDistance = 1.5f;
-    [SerializeField] private float sphereYOffset = 0f;
-    [SerializeField] private float sphereRadius = 0.5f;
-    [SerializeField] private float raycastDistance = 3f;
-    [SerializeField] private Color gizmoColor = Color.cyan;
+    private readonly float sphereDistance;
+    private readonly float sphereYOffset;
+    private readonly float sphereRadius;
+    private readonly float raycastDistance;
 
-    private void OnDrawGizmos()
+    public PlayerWaterDetection(float sphereDistance, float sphereYOffset, float sphereRadius, float raycastDistance)
     {
-        Gizmos.color = gizmoColor;
-
-        Vector3 spherePosition = transform.position + transform.forward * sphereDistance + Vector3.up * sphereYOffset;
-        Gizmos.DrawWireSphere(spherePosition, sphereRadius);
-        Gizmos.DrawLine(spherePosition, spherePosition + Vector3.down * raycastDistance);
+        this.sphereDistance = sphereDistance;
+        this.sphereYOffset = sphereYOffset;
+        this.sphereRadius = sphereRadius;
+        this.raycastDistance = raycastDistance;
     }
 
-    public bool IsDetectingWater()
+    public bool IsDetectingWater(Transform playerTransform)
     {
-        Vector3 spherePosition = transform.position + transform.forward * sphereDistance + Vector3.up * sphereYOffset;
+        if (playerTransform == null)
+        {
+            return false;
+        }
+
+        Vector3 spherePosition =
+            playerTransform.position +
+            playerTransform.forward * sphereDistance +
+            Vector3.up * sphereYOffset;
 
         if (!Physics.Raycast(spherePosition, Vector3.down, out RaycastHit firstHit, raycastDistance))
         {
             return false;
         }
 
-        if (!firstHit.collider.CompareTag("Water"))
-        {
-            return false;
-        }
-
-        return true;
+        return firstHit.collider.CompareTag("Water");
     }
 }

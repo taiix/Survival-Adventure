@@ -1,48 +1,54 @@
 using System;
-using UnityEngine;
 
-public sealed class PlayerStamina : MonoBehaviour
+public sealed class PlayerStamina
 {
-    [Header("Stamina")]
-    [SerializeField, Min(1f)] private float maxStamina = 100f;
-    [SerializeField, Min(0.1f)] private float drainRate = 20f;
-    [SerializeField, Min(0.1f)] private float regenRate = 10f;
-    [SerializeField, Min(0f)] private float regenDelay = 1.5f;
+    private readonly float maxStamina;
+    private readonly float drainRate;
+    private readonly float regenRate;
+    private readonly float regenDelay;
 
-    public float MaxStamina => maxStamina;
-    public float CurrentStamina { get; private set; }
-    public bool HasStamina => CurrentStamina > 0f;
-
-    public event Action<float, float> OnStaminaChanged;
-
+    private float currentStamina;
     private float timeSinceLastDrain;
 
-    private void Awake()
+    public PlayerStamina(float maxStamina, float drainRate, float regenRate, float regenDelay)
     {
-        CurrentStamina = maxStamina;
+        this.maxStamina = maxStamina;
+        this.drainRate = drainRate;
+        this.regenRate = regenRate;
+        this.regenDelay = regenDelay;
+
+        currentStamina = maxStamina;
         timeSinceLastDrain = regenDelay;
     }
 
+    public float MaxStamina => maxStamina;
+    public float CurrentStamina => currentStamina;
+    public bool HasStamina => currentStamina > 0f;
+
+    public event Action<float, float> OnStaminaChanged;
+
     public void UseStamina(float deltaTime)
     {
-        if (CurrentStamina <= 0f)
+        if (currentStamina <= 0f)
         {
             return;
         }
 
-        CurrentStamina = Mathf.Max(0f, CurrentStamina - drainRate * deltaTime);
+        currentStamina = Math.Max(0f, currentStamina - drainRate * deltaTime);
         timeSinceLastDrain = 0f;
-        OnStaminaChanged?.Invoke(CurrentStamina, maxStamina);
+        OnStaminaChanged?.Invoke(currentStamina, maxStamina);
     }
 
-    private void Update()
+    public void Update(float deltaTime)
     {
-        timeSinceLastDrain += Time.deltaTime;
+        timeSinceLastDrain += deltaTime;
 
-        if (timeSinceLastDrain >= regenDelay && CurrentStamina < maxStamina)
+        if (timeSinceLastDrain < regenDelay || currentStamina >= maxStamina)
         {
-            CurrentStamina = Mathf.Min(maxStamina, CurrentStamina + regenRate * Time.deltaTime);
-            OnStaminaChanged?.Invoke(CurrentStamina, maxStamina);
+            return;
         }
+
+        currentStamina = Math.Min(maxStamina, currentStamina + regenRate * deltaTime);
+        OnStaminaChanged?.Invoke(currentStamina, maxStamina);
     }
 }
