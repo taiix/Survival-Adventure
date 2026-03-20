@@ -1,34 +1,32 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public sealed class PlayerInputHandler
 {
     private const float inputDeadzone = 0.1f;
+    private const float buttonThreshold = 0.5f;
+
+    private const string moveForwardInputKey = "MoveForward";
+    private const string turnInputKey = "Turn";
+    private const string moveVectorInputKey = "MoveVector";
+    private const string sprintInputKey = "Sprint";
+    private const string attackInputKey = "Attack";
 
     private readonly InputActionAsset actionAsset;
     private readonly string keyboardActionMapName;
     private readonly string controllerActionMapName;
-    private readonly string moveForwardActionName;
-    private readonly string turnActionName;
-    private readonly string controllerMoveActionName;
-    private readonly string sprintActionName;
+    private readonly Dictionary<string, InputBinding> bindings;
 
     private InputActionMap keyboardInputActionMap;
     private InputActionMap controllerInputActionMap;
-
-    private InputAction keyboardMoveInputAction;
-    private InputAction keyboardTurnInputAction;
-    private InputAction keyboardSprintInputAction;
-
-    private InputAction controllerMoveInputAction;
-    private InputAction controllerTurnInputAction;
-    private InputAction controllerSprintInputAction;
 
     public float MoveInput { get; private set; }
     public Vector2 MoveInputVector { get; private set; }
     public float TurnInput { get; private set; }
     public bool IsSprinting { get; private set; }
+    public bool IsAttacking { get; private set; }
     public bool UsingControllerInput { get; private set; }
 
     public PlayerInputHandler(
@@ -43,12 +41,34 @@ public sealed class PlayerInputHandler
         this.actionAsset = actionAsset;
         this.keyboardActionMapName = keyboardActionMapName;
         this.controllerActionMapName = controllerActionMapName;
-        this.moveForwardActionName = moveForwardActionName;
-        this.turnActionName = turnActionName;
-        this.controllerMoveActionName = controllerMoveActionName;
-        this.sprintActionName = sprintActionName;
+        bindings = new Dictionary<string, InputBinding>(StringComparer.Ordinal);
+
+        RegisterInput(moveForwardInputKey, moveForwardActionName, null, true, false);
+        RegisterInput(turnInputKey, turnActionName, turnActionName, true, false);
+        RegisterInput(moveVectorInputKey, null, controllerMoveActionName, false, false);
+        RegisterInput(sprintInputKey, "Sprint", "Sprint", false, false);
+        RegisterInput(attackInputKey, "Attack", "Attack", false, false);
 
         ResolveActions();
+    }
+
+    public void RegisterInput(
+        string inputKey,
+        string keyboardActionName,
+        string controllerActionName,
+        bool throwIfKeyboardActionMissing,
+        bool throwIfControllerActionMissing)
+    {
+        if (string.IsNullOrWhiteSpace(inputKey))
+        {
+            return;
+        }
+
+        bindings[inputKey] = new InputBinding(
+            keyboardActionName,
+            controllerActionName,
+            throwIfKeyboardActionMissing,
+            throwIfControllerActionMissing);
     }
 
     public void Enable()
@@ -71,11 +91,12 @@ public sealed class PlayerInputHandler
             return;
         }
 
-        float keyboardMove = ReadForwardInput(keyboardMoveInputAction);
-        float keyboardTurn = ReadTurnInput(keyboardTurnInputAction, null);
+        float keyboardMove = ReadAxisInput(GetKeyboardAction(moveForwardInputKey), true);
+        float keyboardTurn = ReadTurnInput(GetKeyboardAction(turnInputKey), null);
 
-        Vector2 controllerMoveVector = ReadMoveVector(controllerMoveInputAction);
-        float controllerTurn = ReadTurnInput(controllerTurnInputAction, controllerMoveInputAction);
+        InputAction controllerMoveAction = GetControllerAction(moveVectorInputKey);
+        Vector2 controllerMoveVector = ReadMoveVector(controllerMoveAction);
+        float controllerTurn = ReadTurnInput(GetControllerAction(turnInputKey), controllerMoveAction);
 
         float keyboardActivity = Mathf.Max(Mathf.Abs(keyboardMove), Mathf.Abs(keyboardTurn));
         float controllerActivity = Mathf.Max(controllerMoveVector.magnitude, Mathf.Abs(controllerTurn));
@@ -92,20 +113,24 @@ public sealed class PlayerInputHandler
             UsingControllerInput = false;
         }
 
+        InputAction sprintAction = GetPreferredAction(sprintInputKey);
+        InputAction attackAction = GetPreferredAction(attackInputKey);
+
         if (UsingControllerInput)
         {
             MoveInputVector = controllerMoveVector;
             MoveInput = controllerMoveVector.magnitude;
             TurnInput = 0f;
-            IsSprinting = ReadSprintInput(controllerSprintInputAction ?? keyboardSprintInputAction);
         }
         else
         {
             MoveInputVector = new Vector2(0f, keyboardMove);
             MoveInput = keyboardMove;
             TurnInput = keyboardTurn;
-            IsSprinting = ReadSprintInput(keyboardSprintInputAction ?? controllerSprintInputAction);
         }
+
+        IsSprinting = ReadButtonInput(sprintAction, buttonThreshold);
+        if (!IsSprinting) IsAttacking = ReadButtonInput(attackAction, buttonThreshold);
 
         if (Mathf.Abs(MoveInput) < inputDeadzone)
         {
@@ -129,6 +154,7 @@ public sealed class PlayerInputHandler
         MoveInputVector = Vector2.zero;
         TurnInput = 0f;
         IsSprinting = false;
+        IsAttacking = false;
         UsingControllerInput = false;
     }
 
@@ -142,13 +168,47 @@ public sealed class PlayerInputHandler
         keyboardInputActionMap = ResolveActionMap(keyboardActionMapName);
         controllerInputActionMap = ResolveActionMap(controllerActionMapName);
 
-        keyboardMoveInputAction = ResolveAction(keyboardInputActionMap, moveForwardActionName, true);
-        keyboardTurnInputAction = ResolveAction(keyboardInputActionMap, turnActionName, true);
-        keyboardSprintInputAction = ResolveAction(keyboardInputActionMap, sprintActionName, false);
+        foreach (KeyValuePair<string, InputBinding> pair in bindings)
+        {
+            InputBinding binding = pair.Value;
+            binding.KeyboardAction = ResolveAction(
+                keyboardInputActionMap,
+                binding.KeyboardActionName,
+                binding.ThrowIfKeyboardActionMissing);
 
-        controllerMoveInputAction = ResolveAction(controllerInputActionMap, controllerMoveActionName, false);
-        controllerTurnInputAction = ResolveAction(controllerInputActionMap, turnActionName, false);
-        controllerSprintInputAction = ResolveAction(controllerInputActionMap, sprintActionName, false);
+            binding.ControllerAction = ResolveAction(
+                controllerInputActionMap,
+                binding.ControllerActionName,
+                binding.ThrowIfControllerActionMissing);
+        }
+    }
+
+    private InputAction GetPreferredAction(string inputKey)
+    {
+        return UsingControllerInput
+            ? (GetControllerAction(inputKey) ?? GetKeyboardAction(inputKey))
+            : (GetKeyboardAction(inputKey) ?? GetControllerAction(inputKey));
+    }
+
+    private InputAction GetKeyboardAction(string inputKey)
+    {
+        return GetAction(inputKey, true);
+    }
+
+    private InputAction GetControllerAction(string inputKey)
+    {
+        return GetAction(inputKey, false);
+    }
+
+    private InputAction GetAction(string inputKey, bool keyboard)
+    {
+        InputBinding binding;
+        if (inputKey == null || !bindings.TryGetValue(inputKey, out binding))
+        {
+            return null;
+        }
+
+        return keyboard ? binding.KeyboardAction : binding.ControllerAction;
     }
 
     private InputActionMap ResolveActionMap(string actionMapName)
@@ -163,7 +223,7 @@ public sealed class PlayerInputHandler
 
     private InputAction ResolveAction(InputActionMap actionMap, string actionName, bool throwIfNotFound)
     {
-        if (actionAsset == null)
+        if (actionAsset == null || string.IsNullOrWhiteSpace(actionName))
         {
             return null;
         }
@@ -174,11 +234,6 @@ public sealed class PlayerInputHandler
         }
 
         return actionAsset.FindAction(actionName, throwIfNotFound);
-    }
-
-    private static float ReadForwardInput(InputAction action)
-    {
-        return ReadAxisInput(action, useYComponentForVector2: true);
     }
 
     private static Vector2 ReadMoveVector(InputAction action)
@@ -193,22 +248,21 @@ public sealed class PlayerInputHandler
             return action.ReadValue<Vector2>();
         }
 
-        float value = action.ReadValue<float>();
-        return new Vector2(0f, value);
+        return new Vector2(0f, action.ReadValue<float>());
     }
 
     private static float ReadTurnInput(InputAction action, InputAction vectorFallbackAction)
     {
-        float turnInput = ReadAxisInput(action, useYComponentForVector2: false);
+        float turnInput = ReadAxisInput(action, false);
         if (Mathf.Abs(turnInput) > 0.0001f)
         {
             return turnInput;
         }
 
-        return ReadAxisInput(vectorFallbackAction, useYComponentForVector2: false);
+        return ReadAxisInput(vectorFallbackAction, false);
     }
 
-    private static bool ReadSprintInput(InputAction action)
+    private static bool ReadButtonInput(InputAction action, float threshold)
     {
         if (action == null)
         {
@@ -217,11 +271,10 @@ public sealed class PlayerInputHandler
 
         if (IsVector2Action(action))
         {
-            Vector2 value = action.ReadValue<Vector2>();
-            return value.y > 0.5f;
+            return action.ReadValue<Vector2>().y > threshold;
         }
 
-        return action.ReadValue<float>() > 0.5f;
+        return action.ReadValue<float>() > threshold;
     }
 
     private static float ReadAxisInput(InputAction action, bool useYComponentForVector2)
@@ -266,5 +319,27 @@ public sealed class PlayerInputHandler
         }
 
         return false;
+    }
+
+    private sealed class InputBinding
+    {
+        public InputBinding(
+            string keyboardActionName,
+            string controllerActionName,
+            bool throwIfKeyboardActionMissing,
+            bool throwIfControllerActionMissing)
+        {
+            KeyboardActionName = keyboardActionName;
+            ControllerActionName = controllerActionName;
+            ThrowIfKeyboardActionMissing = throwIfKeyboardActionMissing;
+            ThrowIfControllerActionMissing = throwIfControllerActionMissing;
+        }
+
+        public string KeyboardActionName { get; private set; }
+        public string ControllerActionName { get; private set; }
+        public bool ThrowIfKeyboardActionMissing { get; private set; }
+        public bool ThrowIfControllerActionMissing { get; private set; }
+        public InputAction KeyboardAction { get; set; }
+        public InputAction ControllerAction { get; set; }
     }
 }

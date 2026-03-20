@@ -82,7 +82,7 @@ public class WorldCreator : MonoBehaviour
                 Vector2Int cell = new Vector2Int(x, y);
                 Vector3 basePosition = new Vector3(x * tileSize, landYOffset, y * tileSize);
 
-                SpawnRandomPrefab(landObjects, basePosition, Quaternion.identity, landParent, 1f, true);
+                SpawnRandomPrefab(landObjects, basePosition, Quaternion.identity, landParent, 1f, false);
 
                 if (height >= highThreshold)
                 {
@@ -109,7 +109,7 @@ public class WorldCreator : MonoBehaviour
                         treeChance,
                         treeTileOffset,
                         treeYOffset,
-                        true);
+                        false);
 
                     TrySpawnDecorativePrefab(
                         collectibleObjects,

@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
-public class PlayerController : MonoBehaviour
+public sealed class PlayerController : MonoBehaviour
 {
     [Header("Input Actions")]
     [SerializeField] private InputActionAsset moveAction;
@@ -24,7 +24,6 @@ public class PlayerController : MonoBehaviour
     private const string turnActionName = "Turn";
     private const string controllerMoveActionName = "Moving";
     private const string sprintActionName = "Sprint";
-
     private const float gravity = -9.81f;
 
     private CharacterController characterController;
@@ -32,26 +31,15 @@ public class PlayerController : MonoBehaviour
     private PlayerInputHandler inputHandler;
     private PlayerMotor playerMotor;
     private PlayerStamina playerStamina;
-
+    private PlayerAttack playerAttack;
+    private PlayerWaterDetection playerWaterDetection;
     private bool previousUsingControllerInput;
+    private bool previousAttackPressed;
 
     private void Awake()
     {
-        characterController = GetComponent<CharacterController>();
-        animator = GetComponent<Animator>();
-
-        inputHandler = new PlayerInputHandler(
-            moveAction,
-            keyboardActionMapName,
-            controllerActionMapName,
-            moveForwardActionName,
-            turnActionName,
-            controllerMoveActionName,
-            sprintActionName);
-
-        playerMotor = new PlayerMotor(characterController, transform, turnAngle);
-        playerStamina = GetComponent<PlayerStamina>();
-        previousUsingControllerInput = inputHandler.UsingControllerInput;
+        InitializeComponents();
+        InitializeSystems();
     }
 
     private void OnEnable()
@@ -67,28 +55,74 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         inputHandler.UpdateInputState();
+        HandleInputModeSwitch();
 
-        if (inputHandler.UsingControllerInput != previousUsingControllerInput)
+        bool isSprinting = ResolveSprintState();
+        float moveSpeed = isSprinting ? sprintSpeed : walkSpeed;
+
+        HandleMovement(moveSpeed);
+        AttackControl();
+        UpdateAnimator(isSprinting);
+    }
+
+    private void InitializeComponents()
+    {
+        characterController = GetComponent<CharacterController>();
+        animator = GetComponent<Animator>();
+        playerStamina = GetComponent<PlayerStamina>();
+        playerAttack = GetComponent<PlayerAttack>();
+    }
+
+    private void InitializeSystems()
+    {
+        inputHandler = new PlayerInputHandler(
+            moveAction,
+            keyboardActionMapName,
+            controllerActionMapName,
+            moveForwardActionName,
+            turnActionName,
+            controllerMoveActionName,
+            sprintActionName);
+
+        playerMotor = new PlayerMotor(characterController, transform, turnAngle);
+        previousUsingControllerInput = inputHandler.UsingControllerInput;
+    }
+
+    private void HandleInputModeSwitch()
+    {
+        if (inputHandler.UsingControllerInput == previousUsingControllerInput)
         {
-            playerMotor.ResetInputState();
-            previousUsingControllerInput = inputHandler.UsingControllerInput;
+            return;
         }
 
+        playerMotor.ResetInputState();
+        previousUsingControllerInput = inputHandler.UsingControllerInput;
+    }
+
+    private bool ResolveSprintState()
+    {
         bool isSprinting = inputHandler.IsSprinting && (playerStamina == null || playerStamina.HasStamina);
         if (isSprinting && playerStamina != null)
         {
             playerStamina.UseStamina(Time.deltaTime);
         }
-        float moveSpeed = isSprinting ? sprintSpeed : walkSpeed;
+
+        return isSprinting;
+    }
+
+    private void HandleMovement(float moveSpeed)
+    {
+        if (inputHandler.IsAttacking) return;
+
+       //if()
+            playerMotor.Move(
+            inputHandler.MoveInput,
+            moveSpeed,
+            gravity,
+            Time.deltaTime);
 
         if (inputHandler.UsingControllerInput)
         {
-            playerMotor.Move(
-                inputHandler.MoveInput,
-                moveSpeed,
-                gravity,
-                Time.deltaTime);
-
             playerMotor.Rotate(
                 inputHandler.MoveInputVector,
                 rotationSpeed,
@@ -97,23 +131,33 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            playerMotor.Move(
-                inputHandler.MoveInput,
-                moveSpeed,
-                gravity,
-                Time.deltaTime);
-
             playerMotor.Rotate(
                 inputHandler.TurnInput,
                 rotationSpeed,
                 smoothRotation,
                 Time.deltaTime);
         }
-
-        UpdateAnimator(moveSpeed, isSprinting);
     }
 
-    private void UpdateAnimator(float moveSpeed, bool isSprinting)
+    private void AttackControl()
+    {
+        if (playerAttack == null)
+        {
+            return;
+        }
+
+        bool isAttackPressed = inputHandler.IsAttacking;
+
+        if (isAttackPressed && !previousAttackPressed)
+        {
+            playerAttack.Attack();
+            Debug.Log("Attack input detected, performing attack.");
+        }
+
+        previousAttackPressed = isAttackPressed;
+    }
+
+    private void UpdateAnimator(bool isSprinting)
     {
         if (animator == null)
         {
@@ -121,21 +165,16 @@ public class PlayerController : MonoBehaviour
         }
 
         float inputAmount = Mathf.Clamp01(Mathf.Abs(inputHandler.MoveInput));
+        float normalizedSpeed = 0f;
 
-        float normalizedSpeed;
-        if (inputAmount <= 0f)
+        if (inputAmount > 0f)
         {
-            normalizedSpeed = 0f;
-        }
-        else if (isSprinting)
-        {
-            normalizedSpeed = Mathf.Lerp(sprintThreshold, 1f, inputAmount);
-        }
-        else
-        {
-            normalizedSpeed = Mathf.Lerp(0f, sprintThreshold, inputAmount);
+            normalizedSpeed = isSprinting
+                ? Mathf.Lerp(sprintThreshold, 1f, inputAmount)
+                : Mathf.Lerp(0f, sprintThreshold, inputAmount);
         }
 
         animator.SetFloat("Speed", normalizedSpeed);
     }
 }
+
