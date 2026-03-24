@@ -52,6 +52,7 @@ public sealed class PlayerInputHandler
         RegisterInput(sprintInputKey, sprintActionName, sprintActionName, false, false);
         RegisterInput(attackInputKey, "Attack", "Attack", false, false);
         RegisterInput(jumpInputKey, jumpActionName, jumpActionName, false, false);
+        RegisterInput("Interact", "Interact", "Interact", false, false);
 
         ResolveActions();
     }
@@ -73,6 +74,11 @@ public sealed class PlayerInputHandler
             controllerActionName,
             throwIfKeyboardActionMissing,
             throwIfControllerActionMissing);
+    }
+
+    public InputAction GetInputAction(string inputKey)
+    {
+        return GetPreferredAction(inputKey);
     }
 
     public void Enable()
