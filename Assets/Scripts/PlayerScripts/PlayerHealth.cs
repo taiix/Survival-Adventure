@@ -6,6 +6,9 @@ public sealed class PlayerHealth : MonoBehaviour, IDamageable
     [Header("Health")]
     [SerializeField, Min(1f)] private float maxHealth = 100f;
 
+    [SerializeField] private float currentHealth;
+
+    private HitFeedback hitFeedback;
     public float MaxHealth => maxHealth;
     public float CurrentHealth { get; private set; }
     public bool IsAlive => CurrentHealth > 0f;
@@ -15,7 +18,9 @@ public sealed class PlayerHealth : MonoBehaviour, IDamageable
 
     private void Awake()
     {
+        hitFeedback = GetComponent<HitFeedback>();
         CurrentHealth = maxHealth;
+        currentHealth = CurrentHealth;
     }
 
     public void TakeDamage(float amount)
@@ -27,7 +32,9 @@ public sealed class PlayerHealth : MonoBehaviour, IDamageable
 
         CurrentHealth = Mathf.Max(0f, CurrentHealth - amount);
         OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
+        currentHealth = CurrentHealth;
 
+        hitFeedback.PlayHitFeedback();
         if (!IsAlive)
         {
             OnDeath?.Invoke();
