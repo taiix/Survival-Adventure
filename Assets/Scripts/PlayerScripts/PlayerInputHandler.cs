@@ -13,6 +13,7 @@ public sealed class PlayerInputHandler
     private const string moveVectorInputKey = "MoveVector";
     private const string sprintInputKey = "Sprint";
     private const string attackInputKey = "Attack";
+    private const string jumpInputKey = "Jump";
 
     private readonly InputActionAsset actionAsset;
     private readonly string keyboardActionMapName;
@@ -27,6 +28,7 @@ public sealed class PlayerInputHandler
     public float TurnInput { get; private set; }
     public bool IsSprinting { get; private set; }
     public bool IsAttacking { get; private set; }
+    public bool IsJumping { get; private set; }
     public bool UsingControllerInput { get; private set; }
 
     public PlayerInputHandler(
@@ -36,7 +38,8 @@ public sealed class PlayerInputHandler
         string moveForwardActionName,
         string turnActionName,
         string controllerMoveActionName,
-        string sprintActionName)
+        string sprintActionName,
+        string jumpActionName)
     {
         this.actionAsset = actionAsset;
         this.keyboardActionMapName = keyboardActionMapName;
@@ -46,8 +49,9 @@ public sealed class PlayerInputHandler
         RegisterInput(moveForwardInputKey, moveForwardActionName, null, true, false);
         RegisterInput(turnInputKey, turnActionName, turnActionName, true, false);
         RegisterInput(moveVectorInputKey, null, controllerMoveActionName, false, false);
-        RegisterInput(sprintInputKey, "Sprint", "Sprint", false, false);
+        RegisterInput(sprintInputKey, sprintActionName, sprintActionName, false, false);
         RegisterInput(attackInputKey, "Attack", "Attack", false, false);
+        RegisterInput(jumpInputKey, jumpActionName, jumpActionName, false, false);
 
         ResolveActions();
     }
@@ -115,6 +119,7 @@ public sealed class PlayerInputHandler
 
         InputAction sprintAction = GetPreferredAction(sprintInputKey);
         InputAction attackAction = GetPreferredAction(attackInputKey);
+        InputAction jumpAction = GetPreferredAction(jumpInputKey);
 
         if (UsingControllerInput)
         {
@@ -131,6 +136,7 @@ public sealed class PlayerInputHandler
 
         IsSprinting = ReadButtonInput(sprintAction, buttonThreshold);
         if (!IsSprinting) IsAttacking = ReadButtonInput(attackAction, buttonThreshold);
+        IsJumping = ReadButtonInput(jumpAction, buttonThreshold);
 
         if (Mathf.Abs(MoveInput) < inputDeadzone)
         {
@@ -155,6 +161,7 @@ public sealed class PlayerInputHandler
         TurnInput = 0f;
         IsSprinting = false;
         IsAttacking = false;
+        IsJumping = false;
         UsingControllerInput = false;
     }
 
