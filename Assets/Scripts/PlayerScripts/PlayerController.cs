@@ -1,10 +1,12 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
 public sealed class PlayerController : MonoBehaviour
 {
+    [Header("Player State")]
+    [SerializeField] private PlayerState playerState;
+
     [Header("Input Actions")]
     [SerializeField] private InputActionAsset moveAction;
     [SerializeField] private string keyboardActionMapName = "Keyboard";
@@ -18,16 +20,13 @@ public sealed class PlayerController : MonoBehaviour
     [SerializeField] private bool smoothRotation;
     [SerializeField, Min(0.1f)] private float jumpHeight = 1.5f;
 
-    [Header("Animator")]
-    [SerializeField, Range(0f, 1f)] private float sprintThreshold = 0.5f;
-
     [Header("Stamina")]
     [SerializeField, Min(1f)] private float maxStamina = 100f;
     [SerializeField, Min(0.1f)] private float staminaDrainRate = 20f;
     [SerializeField, Min(0.1f)] private float staminaRegenRate = 10f;
     [SerializeField, Min(0f)] private float staminaRegenDelay = 1.5f;
 
-    [Header("Water Detectiom")]
+    [Header("Water Detection")]
     [SerializeField] private float sphereDistance;
     [SerializeField] private float sphereYOffset;
     [SerializeField] private float sphereRadius;
@@ -40,30 +39,13 @@ public sealed class PlayerController : MonoBehaviour
     private const string jumpActionName = "Jump";
     private const float gravity = -9.81f;
 
-    private CharacterController characterController;
-    private Animator animator;
     private PlayerInputHandler inputHandler;
-    private PlayerMotor playerMotor;
-    private PlayerStamina playerStamina;
-    private PlayerAttack playerAttack;
-    private PlayerWaterDetection playerWaterDetection;
-
-    private bool previousUsingControllerInput;
-    private bool previousAttackPressed;
-    private bool previousJumpPressed;
+    private PlayerStateManager stateManager;
+    private PlayerMovementController movementController;
+    private PlayerStaminaController staminaController;
 
     private void Awake()
     {
-        characterController = GetComponent<CharacterController>();
-        animator = GetComponent<Animator>();
-        playerAttack = GetComponent<PlayerAttack>();
-
-        playerStamina = new PlayerStamina(
-            maxStamina,
-            staminaDrainRate,
-            staminaRegenRate,
-            staminaRegenDelay);
-
         inputHandler = new PlayerInputHandler(
             moveAction,
             keyboardActionMapName,
@@ -74,15 +56,32 @@ public sealed class PlayerController : MonoBehaviour
             sprintActionName,
             jumpActionName);
 
-        playerMotor = new PlayerMotor(characterController, transform, turnAngle);
+        stateManager = new PlayerStateManager();
 
-        playerWaterDetection = new PlayerWaterDetection(
+        staminaController = new PlayerStaminaController(
+            maxStamina,
+            staminaDrainRate,
+            staminaRegenRate,
+            staminaRegenDelay);
+
+        movementController = new PlayerMovementController(
+            GetComponent<CharacterController>(),
+            GetComponent<Animator>(),
+            transform,
+            turnAngle,
+            walkSpeed,
+            sprintSpeed,
+            rotationSpeed,
+            smoothRotation,
+            jumpHeight,
+            gravity,
             sphereDistance,
             sphereYOffset,
             sphereRadius,
             raycastDistance);
 
-        previousUsingControllerInput = inputHandler.UsingControllerInput;
+        GetComponent<PlayerAttack>()?.Initialize(inputHandler, stateManager);
+        GetComponent<PlayerInteraction>()?.Initialize(inputHandler, stateManager);
     }
 
     private void OnEnable() => inputHandler?.Enable();
@@ -91,129 +90,30 @@ public sealed class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        playerState = stateManager.CurrentState;
+
         inputHandler.UpdateInputState();
-        HandleInputModeSwitch();
 
-        bool isSprinting = ResolveSprintState();
-        float moveSpeed = isSprinting ? sprintSpeed : walkSpeed;
-
-        HandleMovement(moveSpeed);
-        AttackControl();
-        playerStamina.Update(Time.deltaTime);
-        UpdateAnimator(isSprinting);
-    }
-
-    private void HandleInputModeSwitch()
-    {
-        if (inputHandler.UsingControllerInput == previousUsingControllerInput)
+        if (stateManager.IsMovementAllowed())
         {
-            return;
-        }
+            bool isSprinting = inputHandler.IsSprinting && staminaController.HasStamina;
 
-        playerMotor.ResetInputState();
-        previousUsingControllerInput = inputHandler.UsingControllerInput;
-    }
+            if (isSprinting)
+            {
+                staminaController.DrainStamina(Time.deltaTime);
+            }
 
-    private bool ResolveSprintState()
-    {
-        bool isSprinting = inputHandler.IsSprinting && playerStamina.HasStamina;
-
-        if (isSprinting)
-        {
-            playerStamina.UseStamina(Time.deltaTime);
-        }
-
-        return isSprinting;
-    }
-
-    private void HandleMovement(float moveSpeed)
-    {
-        if (inputHandler.IsAttacking)
-        {
-            previousJumpPressed = inputHandler.IsJumping;
-            return;
-        }
-
-        bool jumpPressedThisFrame = inputHandler.IsJumping && !previousJumpPressed;
-
-        if (!playerWaterDetection.IsDetectingWater(this.transform))
-        {
-            playerMotor.Move(
-                inputHandler.MoveInput,
-                moveSpeed,
-                gravity,
-                Time.deltaTime,
-                jumpPressedThisFrame,
-                jumpHeight);
-        }
-
-        previousJumpPressed = inputHandler.IsJumping;
-
-        if (inputHandler.UsingControllerInput)
-        {
-            playerMotor.Rotate(
-                inputHandler.MoveInputVector,
-                rotationSpeed,
-                smoothRotation,
-                Time.deltaTime);
+            staminaController.Update(Time.deltaTime);
+            movementController.Update(inputHandler, isSprinting, Time.deltaTime);
         }
         else
         {
-            playerMotor.Rotate(
-                inputHandler.TurnInput,
-                rotationSpeed,
-                smoothRotation,
-                Time.deltaTime);
+            movementController.Idle();
+            staminaController.Update(Time.deltaTime);
         }
     }
 
-    private void AttackControl()
-    {
-        if (playerAttack == null)
-        {
-            return;
-        }
-
-        bool isAttackPressed = inputHandler.IsAttacking;
-
-        if (isAttackPressed && !previousAttackPressed)
-        {
-            playerAttack.Attack();
-            Debug.Log("Attack input detected, performing attack.");
-        }
-
-        previousAttackPressed = isAttackPressed;
-    }
-
-    private void UpdateAnimator(bool isSprinting)
-    {
-        if (animator == null)
-        {
-            return;
-        }
-
-        float inputAmount = Mathf.Clamp01(Mathf.Abs(inputHandler.MoveInput));
-        float normalizedSpeed = 0f;
-
-        if (inputAmount > 0f)
-        {
-            normalizedSpeed = isSprinting
-                ? Mathf.Lerp(sprintThreshold, 1f, inputAmount)
-                : Mathf.Lerp(0f, sprintThreshold, inputAmount);
-        }
-
-        animator.SetFloat("Speed", normalizedSpeed);
-    }
-
-    private void OnDrawGizmos()
-    {
-        Vector3 spherePosition =
-            transform.position +
-            transform.forward * sphereDistance +
-            Vector3.up * sphereYOffset;
-        Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(spherePosition, sphereRadius);
-        Gizmos.DrawLine(spherePosition, spherePosition + Vector3.down * raycastDistance);
-    }
+    public InputAction GetInputAction(string actionKey) => inputHandler.GetInputAction(actionKey);
+    public PlayerStateManager GetStateManager() => stateManager;
 }
 

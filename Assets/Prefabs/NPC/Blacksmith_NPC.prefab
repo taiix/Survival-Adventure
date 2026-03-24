@@ -9,7 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3656980142761628889}
-  m_Layer: 0
+  - component: {fileID: 8674110735833163996}
+  - component: {fileID: 8982591485937384318}
+  - component: {fileID: 2606800378428117360}
+  m_Layer: 8
   m_Name: Blacksmith_NPC
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -24,9 +27,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1790408685641622147}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.99954844, z: -0, w: 0.030049874}
+  m_LocalRotation: {x: 0, y: 0.99954844, z: 0, w: 0.030050041}
   m_LocalPosition: {x: 3.31, y: 0.6286, z: 10.461}
-  m_LocalScale: {x: 0.61109, y: 0.61109, z: 0.61109}
+  m_LocalScale: {x: 0.6110901, y: 0.61109, z: 0.6110901}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4583199439497957549}
@@ -34,6 +37,62 @@ Transform:
   - {fileID: 7856751535651484209}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 176.556, z: 0}
+--- !u!95 &8674110735833163996
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1790408685641622147}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 852c93fc8f4255e478e8b4d9c83a83d3, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!65 &8982591485937384318
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1790408685641622147}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0.42, z: 0.57}
+--- !u!114 &2606800378428117360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1790408685641622147}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d72eeb72126c26445b5a274ecd4a65eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  npcName: Vylkodav Kostov
 --- !u!1 &2992928300219305638
 GameObject:
   m_ObjectHideFlags: 0
@@ -44,7 +103,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4583199439497957549}
   - component: {fileID: 2251871790277644294}
-  m_Layer: 0
+  - component: {fileID: 4937501857033416994}
+  m_Layer: 8
   m_Name: body-mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -133,6 +193,27 @@ SkinnedMeshRenderer:
     m_Center: {x: 0, y: 0.18412507, z: -0.027934648}
     m_Extent: {x: 0.38358414, y: 0.18412495, z: 0.13492665}
   m_DirtyAABB: 0
+--- !u!65 &4937501857033416994
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2992928300219305638}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.76716834, y: 0.3682499, z: 0.26985332}
+  m_Center: {x: 0, y: 0.18412505, z: -0.027932743}
 --- !u!1 &3645398817542209262
 GameObject:
   m_ObjectHideFlags: 0
@@ -143,7 +224,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1003676468003770165}
   - component: {fileID: 1919144234223794743}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: head-mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -241,7 +322,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7856751535651484209}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: root
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -275,7 +356,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3683738718367295833}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: arm-left
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -306,7 +387,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1908256369801164665}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: arm-right
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -337,7 +418,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4679583379440982303}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: leg-left
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -368,7 +449,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2587047008018290358}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: head
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -399,7 +480,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4067040130247790403}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: leg-right
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -430,7 +511,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7405044040568491102}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: torso
   m_TagString: Untagged
   m_Icon: {fileID: 0}
