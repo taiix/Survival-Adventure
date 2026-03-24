@@ -54,7 +54,7 @@ public class EnemyProjectile : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
+            other.TryGetComponent(out IDamageable playerHealth);
             if (playerHealth != null)
             {
                 playerHealth.TakeDamage(damageAmount);
