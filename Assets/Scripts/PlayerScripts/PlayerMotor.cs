@@ -26,7 +26,13 @@ public sealed class PlayerMotor
         previousTurnInput = 0f;
     }
 
-    public void Move(float forwardInput, float moveSpeed, float gravity, float deltaTime)
+    public void Move(
+        float forwardInput,
+        float moveSpeed,
+        float gravity,
+        float deltaTime,
+        bool jumpPressed,
+        float jumpHeight)
     {
         Vector3 localForward = Vector3.forward;
         Vector3 move = playerTransform.TransformDirection(localForward) * forwardInput;
@@ -34,6 +40,11 @@ public sealed class PlayerMotor
         if (characterController.isGrounded && verticalVelocity < 0f)
         {
             verticalVelocity = -2f;
+        }
+
+        if (jumpPressed && characterController.isGrounded)
+        {
+            verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
 
         verticalVelocity += gravity * deltaTime;
