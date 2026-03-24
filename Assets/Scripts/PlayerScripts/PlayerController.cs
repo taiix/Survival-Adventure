@@ -16,6 +16,7 @@ public sealed class PlayerController : MonoBehaviour
     [SerializeField] private float turnAngle = 90f;
     [SerializeField] private float rotationSpeed = 180f;
     [SerializeField] private bool smoothRotation;
+    [SerializeField, Min(0.1f)] private float jumpHeight = 1.5f;
 
     [Header("Animator")]
     [SerializeField, Range(0f, 1f)] private float sprintThreshold = 0.5f;
@@ -36,6 +37,7 @@ public sealed class PlayerController : MonoBehaviour
     private const string turnActionName = "Turn";
     private const string controllerMoveActionName = "Moving";
     private const string sprintActionName = "Sprint";
+    private const string jumpActionName = "Jump";
     private const float gravity = -9.81f;
 
     private CharacterController characterController;
@@ -48,6 +50,7 @@ public sealed class PlayerController : MonoBehaviour
 
     private bool previousUsingControllerInput;
     private bool previousAttackPressed;
+    private bool previousJumpPressed;
 
     private void Awake()
     {
@@ -68,7 +71,8 @@ public sealed class PlayerController : MonoBehaviour
             moveForwardActionName,
             turnActionName,
             controllerMoveActionName,
-            sprintActionName);
+            sprintActionName,
+            jumpActionName);
 
         playerMotor = new PlayerMotor(characterController, transform, turnAngle);
 
@@ -126,17 +130,24 @@ public sealed class PlayerController : MonoBehaviour
     {
         if (inputHandler.IsAttacking)
         {
+            previousJumpPressed = inputHandler.IsJumping;
             return;
         }
+
+        bool jumpPressedThisFrame = inputHandler.IsJumping && !previousJumpPressed;
 
         if (!playerWaterDetection.IsDetectingWater(this.transform))
         {
             playerMotor.Move(
-            inputHandler.MoveInput,
-            moveSpeed,
-            gravity,
-            Time.deltaTime);
+                inputHandler.MoveInput,
+                moveSpeed,
+                gravity,
+                Time.deltaTime,
+                jumpPressedThisFrame,
+                jumpHeight);
         }
+
+        previousJumpPressed = inputHandler.IsJumping;
 
         if (inputHandler.UsingControllerInput)
         {
