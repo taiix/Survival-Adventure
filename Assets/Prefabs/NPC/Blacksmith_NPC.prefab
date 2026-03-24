@@ -1,5 +1,60 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1263907393799641783
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7558711470367090916}
+  - component: {fileID: 1533402838119117500}
+  m_Layer: 0
+  m_Name: UIDocument
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &7558711470367090916
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1263907393799641783}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0.96462435, z: -0, w: -0.26362842}
+  m_LocalPosition: {x: 2.450482, y: 0.28310063, z: 14.854036}
+  m_LocalScale: {x: 0.32229286, y: 0.32229295, z: 0.32229286}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3656980142761628889}
+  m_LocalEulerAnglesHint: {x: 0, y: -34.015, z: 0}
+--- !u!114 &1533402838119117500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1263907393799641783}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
+  m_PanelSettings: {fileID: 11400000, guid: 901086f9889027f43ac0abf14f789ca1, type: 2}
+  m_ParentUI: {fileID: 0}
+  sourceAsset: {fileID: 9197481963319205126, guid: e0e0b4196c97713429e72810f2df4681, type: 3}
+  m_SortingOrder: 0
+  m_Position: 0
+  m_WorldSpaceSizeMode: 0
+  m_WorldSpaceWidth: 1920
+  m_WorldSpaceHeight: 1080
+  m_PivotReferenceSize: 0
+  m_Pivot: 7
+  m_WorldSpaceCollider: {fileID: 0}
 --- !u!1 &1790408685641622147
 GameObject:
   m_ObjectHideFlags: 0
@@ -35,6 +90,7 @@ Transform:
   - {fileID: 4583199439497957549}
   - {fileID: 1003676468003770165}
   - {fileID: 7856751535651484209}
+  - {fileID: 7558711470367090916}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 176.556, z: 0}
 --- !u!95 &8674110735833163996
@@ -93,6 +149,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   npcName: Vylkodav Kostov
+  associatedUI: {fileID: 1263907393799641783}
 --- !u!1 &2992928300219305638
 GameObject:
   m_ObjectHideFlags: 0
