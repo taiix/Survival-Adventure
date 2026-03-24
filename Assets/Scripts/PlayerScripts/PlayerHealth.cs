@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public sealed class PlayerHealth : MonoBehaviour
+public sealed class PlayerHealth : MonoBehaviour, IDamageable
 {
     [Header("Health")]
     [SerializeField, Min(1f)] private float maxHealth = 100f;

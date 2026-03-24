@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-public abstract class BaseEnemy : MonoBehaviour
+public abstract class BaseEnemy : MonoBehaviour, IDamageable
 {
     [Header("Stats")]
     [SerializeField] protected float maxHealth = 50f;
