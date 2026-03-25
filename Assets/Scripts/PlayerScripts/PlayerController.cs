@@ -20,6 +20,13 @@ public sealed class PlayerController : MonoBehaviour
     [SerializeField] private bool smoothRotation;
     [SerializeField, Min(0.1f)] private float jumpHeight = 1.5f;
 
+    [Header("Dash")]
+    [SerializeField] private string dashTriggerName = "Dash";
+    [SerializeField] private ParticleSystem dashParticles;
+    [SerializeField, Min(0.01f)] private float dashDuration = 0.2f;
+    [SerializeField, Min(0.1f)] private float dashSpeed = 12f;
+    [SerializeField, Min(0f)] private float dashCooldown = 0.5f;
+
     [Header("Stamina")]
     [SerializeField, Min(1f)] private float maxStamina = 100f;
     [SerializeField, Min(0.1f)] private float staminaDrainRate = 20f;
@@ -44,6 +51,16 @@ public sealed class PlayerController : MonoBehaviour
     private PlayerMovementController movementController;
     private PlayerStaminaController staminaController;
 
+    private Animator animator;
+    private CharacterController characterController;
+    private PlayerWaterDetection waterDetection;
+
+    private bool previousDashPressed;
+
+    private float dashTimeRemaining;
+    private float dashCooldownRemaining;
+    private Vector3 dashDirection;
+
     private void Awake()
     {
         inputHandler = new PlayerInputHandler(
@@ -64,9 +81,18 @@ public sealed class PlayerController : MonoBehaviour
             staminaRegenRate,
             staminaRegenDelay);
 
+        animator = GetComponent<Animator>();
+        characterController = GetComponent<CharacterController>();
+
+        waterDetection = new PlayerWaterDetection(
+            sphereDistance,
+            sphereYOffset,
+            sphereRadius,
+            raycastDistance);
+
         movementController = new PlayerMovementController(
-            GetComponent<CharacterController>(),
-            GetComponent<Animator>(),
+            characterController,
+            animator,
             transform,
             turnAngle,
             walkSpeed,
@@ -94,6 +120,9 @@ public sealed class PlayerController : MonoBehaviour
 
         inputHandler.UpdateInputState();
 
+        TickDash(Time.deltaTime);
+        HandleDashInput();
+
         if (stateManager.IsMovementAllowed())
         {
             bool isSprinting = inputHandler.IsSprinting && staminaController.HasStamina;
@@ -113,7 +142,135 @@ public sealed class PlayerController : MonoBehaviour
         }
     }
 
+    private void HandleDashInput()
+    {
+        bool dashPressed = inputHandler.IsDashing;
+        bool dashPressedThisFrame = dashPressed && !previousDashPressed;
+
+        if (dashPressedThisFrame)
+        {
+            TryStartDash();
+        }
+
+        previousDashPressed = dashPressed;
+    }
+
+    private void TryStartDash()
+    {
+        if (!stateManager.IsMovementAllowed())
+        {
+            return;
+        }
+
+        // 1) Ground-only dash
+        if (!characterController.isGrounded)
+        {
+            return;
+        }
+
+        if (dashCooldownRemaining > 0f)
+        {
+            return;
+        }
+
+        // 2) Don't start a dash if we would dash into water (using your existing detection logic)
+        if (waterDetection != null && waterDetection.IsDetectingWater(transform))
+        {
+            return;
+        }
+
+        stateManager.SetState(PlayerState.Dashing);
+
+        dashDirection = GetDashDirection();
+        dashTimeRemaining = dashDuration;
+        dashCooldownRemaining = dashCooldown;
+
+        if (dashParticles != null)
+        {
+            dashParticles.Play(true);
+        }
+
+        if (animator != null && !string.IsNullOrWhiteSpace(dashTriggerName))
+        {
+            animator.ResetTrigger(dashTriggerName);
+            animator.SetTrigger(dashTriggerName);
+        }
+    }
+
+    private Vector3 GetDashDirection()
+    {
+        Vector2 input = inputHandler.MoveInputVector;
+
+        if (input.sqrMagnitude > 0.01f)
+        {
+            Vector3 local = new Vector3(input.x, 0f, input.y).normalized;
+            return transform.TransformDirection(local).normalized;
+        }
+
+        return transform.forward;
+    }
+
+    private void TickDash(float deltaTime)
+    {
+        if (dashCooldownRemaining > 0f)
+        {
+            dashCooldownRemaining -= deltaTime;
+        }
+
+        if (!stateManager.IsState(PlayerState.Dashing))
+        {
+            return;
+        }
+
+        // If water is detected during dash, end immediately to avoid getting stuck.
+        if (waterDetection != null && waterDetection.IsDetectingWater(transform))
+        {
+            dashTimeRemaining = 0f;
+            EndDash();
+            return;
+        }
+
+        if (dashTimeRemaining > 0f)
+        {
+            Vector3 velocity = dashDirection * dashSpeed;
+            characterController.Move(velocity * deltaTime);
+
+            dashTimeRemaining -= deltaTime;
+            return;
+        }
+
+        EndDash();
+    }
+
+    private void EndDash()
+    {
+        if (dashParticles != null)
+        {
+            dashParticles.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        }
+
+        if (stateManager.IsState(PlayerState.Dashing))
+        {
+            stateManager.SetState(PlayerState.Normal);
+        }
+    }
+
+    public void OnDashAnimationFinished()
+    {
+        if (stateManager.IsState(PlayerState.Dashing))
+        {
+            dashTimeRemaining = 0f;
+        }
+    }
+
     public InputAction GetInputAction(string actionKey) => inputHandler.GetInputAction(actionKey);
     public PlayerStateManager GetStateManager() => stateManager;
+
+    private void OnDrawGizmosSelected()
+    {
+        Vector3 p = transform.position + transform.forward * sphereDistance + Vector3.up * sphereYOffset;
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(p, sphereRadius);
+    }
 }
 

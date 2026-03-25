@@ -14,6 +14,7 @@ public sealed class PlayerInputHandler
     private const string sprintInputKey = "Sprint";
     private const string attackInputKey = "Attack";
     private const string jumpInputKey = "Jump";
+    private const string dashInputKey = "Dash";
 
     private readonly InputActionAsset actionAsset;
     private readonly string keyboardActionMapName;
@@ -29,6 +30,7 @@ public sealed class PlayerInputHandler
     public bool IsSprinting { get; private set; }
     public bool IsAttacking { get; private set; }
     public bool IsJumping { get; private set; }
+    public bool IsDashing { get; private set; }
     public bool UsingControllerInput { get; private set; }
 
     public PlayerInputHandler(
@@ -52,6 +54,7 @@ public sealed class PlayerInputHandler
         RegisterInput(sprintInputKey, sprintActionName, sprintActionName, false, false);
         RegisterInput(attackInputKey, "Attack", "Attack", false, false);
         RegisterInput(jumpInputKey, jumpActionName, jumpActionName, false, false);
+        RegisterInput(dashInputKey, "Dash", "Dash", false, false);
         RegisterInput("Interact", "Interact", "Interact", false, false);
 
         ResolveActions();
@@ -126,6 +129,7 @@ public sealed class PlayerInputHandler
         InputAction sprintAction = GetPreferredAction(sprintInputKey);
         InputAction attackAction = GetPreferredAction(attackInputKey);
         InputAction jumpAction = GetPreferredAction(jumpInputKey);
+        InputAction dashAction = GetPreferredAction(dashInputKey);
 
         if (UsingControllerInput)
         {
@@ -143,6 +147,7 @@ public sealed class PlayerInputHandler
         IsSprinting = ReadButtonInput(sprintAction, buttonThreshold);
         if (!IsSprinting) IsAttacking = ReadButtonInput(attackAction, buttonThreshold);
         IsJumping = ReadButtonInput(jumpAction, buttonThreshold);
+        IsDashing = ReadButtonInput(dashAction, buttonThreshold);
 
         if (Mathf.Abs(MoveInput) < inputDeadzone)
         {
@@ -168,6 +173,7 @@ public sealed class PlayerInputHandler
         IsSprinting = false;
         IsAttacking = false;
         IsJumping = false;
+        IsDashing = false;
         UsingControllerInput = false;
     }
 
