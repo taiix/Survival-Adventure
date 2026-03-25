@@ -6,5 +6,6 @@ public enum PlayerState
     Normal,
     Interacting,
     Attacking,
+    Dashing,
     Dead
 }

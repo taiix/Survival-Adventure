@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 
 /// <summary>
 /// Manages the player's current state and state transitions.
@@ -25,5 +24,8 @@ public sealed class PlayerStateManager
     }
 
     public bool IsState(PlayerState state) => currentState == state;
+
     public bool IsMovementAllowed() => currentState == PlayerState.Normal;
+
+    public bool IsInvulnerable() => currentState == PlayerState.Dashing;
 }
