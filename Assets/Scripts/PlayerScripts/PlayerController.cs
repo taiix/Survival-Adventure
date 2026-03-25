@@ -266,6 +266,7 @@ public sealed class PlayerController : MonoBehaviour
     public InputAction GetInputAction(string actionKey) => inputHandler.GetInputAction(actionKey);
     public PlayerStateManager GetStateManager() => stateManager;
     public PlayerStaminaController GetStaminaController() => staminaController;
+<<<<<<< HEAD
 
     private void OnDrawGizmosSelected()
     {
@@ -273,5 +274,7 @@ public sealed class PlayerController : MonoBehaviour
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(p, sphereRadius);
     }
+=======
+>>>>>>> origin/UI
 }
 
