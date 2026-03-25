@@ -145,6 +145,7 @@ public class KnightBossEnemy : BaseEnemy
         }
 
         Vector3 chargeDirection = (playerTransform.position - transform.position).normalized;
+        Vector3 chargeTarget = transform.position + chargeDirection * chargeDistance;
         navMeshAgent.isStopped = false;
         navMeshAgent.speed = chargeSpeed;
 
@@ -152,7 +153,7 @@ public class KnightBossEnemy : BaseEnemy
         while (elapsed < chargeDuration)
         {
             elapsed += Time.deltaTime;
-            navMeshAgent.SetDestination(transform.position + chargeDirection * chargeSpeed);
+            navMeshAgent.SetDestination(chargeTarget);
 
             if (Vector3.Distance(transform.position, playerTransform.position) < attackRange)
             {

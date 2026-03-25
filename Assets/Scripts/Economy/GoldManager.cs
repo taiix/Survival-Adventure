@@ -35,6 +35,13 @@ public sealed class GoldManager : MonoBehaviour
             Instance = null;
     }
 
+    /// <summary>Resets gold to the starting amount. Call when starting a new game session.</summary>
+    public void ResetGold()
+    {
+        currentGold = startingGold;
+        OnGoldChanged?.Invoke(currentGold);
+    }
+
     /// <summary>Returns true if the player can afford the cost.</summary>
     public bool CanAfford(int cost) => currentGold >= cost;
 

@@ -109,7 +109,7 @@ public class MarketUI : MonoBehaviour
                 playerHealth?.Heal(item.healAmount);
                 break;
             case ItemData.ItemType.Gold:
-                GoldManager.Instance?.AddGold(item.healAmount > 0 ? (int)item.healAmount : 10);
+                GoldManager.Instance?.AddGold(item.goldCost > 0 ? item.goldCost : 10);
                 break;
         }
     }

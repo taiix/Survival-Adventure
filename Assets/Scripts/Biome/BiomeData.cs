@@ -14,8 +14,8 @@ public class BiomeData : ScriptableObject
 
     [Header("Unlock")]
     public bool unlockedByDefault = false;
-    [Tooltip("Name of the boss that must be defeated to unlock this biome.")]
-    public string requiredBossName = "";
+    [Tooltip("Boss name that must be defeated to unlock this biome.")]
+    public string requiredBossDefeat = "";
 
     [Header("Music")]
     public AudioClip biomeMusic;

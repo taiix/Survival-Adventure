@@ -25,6 +25,7 @@ public sealed class PlayerStats : MonoBehaviour
     private float dashCooldownReduction;
 
     public float TotalDamage => baseDamage + bonusDamage;
+    public float BaseDamage  => baseDamage;
     public float TotalMaxHealth => baseMaxHealth + bonusMaxHealth;
     public float TotalDefense => Mathf.Clamp01(baseDefense + defenseBonus);
     public float AttackSpeedMultiplier => Mathf.Max(0.1f, attackSpeedMultiplier);

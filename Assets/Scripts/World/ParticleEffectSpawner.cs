@@ -41,9 +41,17 @@ public class ParticleEffectSpawner : MonoBehaviour
         if (prefab == null) return;
         GameObject fx = Instantiate(prefab, position, Quaternion.identity);
 
-        // Auto-destroy based on longest particle duration
+        // Auto-destroy: use longest possible particle lifetime
         ParticleSystem ps = fx.GetComponent<ParticleSystem>();
-        float lifetime = ps != null ? ps.main.duration + ps.main.startLifetime.constantMax : 3f;
+        float lifetime = 3f;
+        if (ps != null)
+        {
+            var main = ps.main;
+            float startLifetime = main.startLifetime.mode == ParticleSystemCurveMode.Constant
+                ? main.startLifetime.constant
+                : main.startLifetime.constantMax;
+            lifetime = main.duration + startLifetime;
+        }
         Destroy(fx, lifetime);
     }
 }

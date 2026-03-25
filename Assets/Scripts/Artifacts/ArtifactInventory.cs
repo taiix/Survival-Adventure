@@ -71,7 +71,8 @@ public class ArtifactInventory : MonoBehaviour
         switch (artifact.effect)
         {
             case ArtifactData.ArtifactEffect.DamageMultiplier:
-                stats.AddDamageBoost(stats.TotalDamage * artifact.effectValue);
+                // Add a flat bonus equal to baseDamage * effectValue to avoid exponential stacking
+                stats.AddDamageBoost(stats.BaseDamage * artifact.effectValue);
                 break;
         }
     }

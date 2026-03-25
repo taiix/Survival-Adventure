@@ -25,6 +25,7 @@ public class DayNightCycle : MonoBehaviour
 
     [Header("Music")]
     [SerializeField] private bool switchMusicAtNight = false;
+    [SerializeField] private AudioClip nightMusic;
 
     private float currentTime;
     private bool isNight;
@@ -80,8 +81,10 @@ public class DayNightCycle : MonoBehaviour
         if (nowNight != isNight)
         {
             isNight = nowNight;
+            // Night/day music transitions – assign night/day clips in the inspector
+            // and call AudioManager directly. Falling back to no-op if not set.
             if (isNight)
-                AudioManager.Instance?.PlayBossTheme(); // use as night music placeholder
+                AudioManager.Instance?.PlayMusic(nightMusic);
             else
                 AudioManager.Instance?.PlayForest();
         }

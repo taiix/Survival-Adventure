@@ -13,8 +13,7 @@ public class UpgradeData : ScriptableObject
         AttackSpeedBoost,
         MaxHPBoost,
         DashCooldownReduction,
-        DefenseBoost,
-        SwordReach
+        DefenseBoost
     }
 
     [Header("Identity")]

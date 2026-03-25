@@ -71,8 +71,8 @@ public class BossEncounterManager : MonoBehaviour
         Vector3 spawnPos = bossSpawnPoint != null ? bossSpawnPoint.position : transform.position;
         activeBoss = Instantiate(bossPrefab, spawnPos, Quaternion.identity);
 
-        activeBoss.OnBossDefeated = HandleBossDefeated;
-        activeBoss.OnBossIntroComplete = () =>
+        activeBoss.OnBossDefeated += HandleBossDefeated;
+        activeBoss.OnBossIntroComplete += () =>
         {
             HideBossIntroPanel();
         };
@@ -128,7 +128,7 @@ public class BossEncounterManager : MonoBehaviour
         OnBossEncounterEnd?.Invoke();
 
         // Notify biome manager that boss is defeated
-        BiomeManager.Instance?.OnBossDefeated();
+        BiomeManager.Instance?.OnBossDefeated(bossDisplayName);
     }
 
     private void SpawnDrops(Vector3 position)

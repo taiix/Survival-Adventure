@@ -78,15 +78,16 @@ public class BiomeManager : MonoBehaviour
     }
 
     /// <summary>Called by BossEncounterManager after a boss is defeated.</summary>
-    public void OnBossDefeated()
+    public void OnBossDefeated(string defeatedBossName = "")
     {
-        if (activeBiome == null) return;
-        // Unlock biomes that require this biome's boss
         foreach (BiomeData biome in allBiomes)
         {
             if (biome == null) continue;
-            if (string.Equals(biome.requiredBossName, activeBiome.biomeName, StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(biome.requiredBossDefeat) &&
+                string.Equals(biome.requiredBossDefeat, defeatedBossName, StringComparison.OrdinalIgnoreCase))
+            {
                 UnlockBiome(biome.biomeName);
+            }
         }
     }
 }

@@ -12,6 +12,9 @@ public class UpgradeManager : MonoBehaviour
 
     private readonly Dictionary<UpgradeData, int> purchasedLevels = new Dictionary<UpgradeData, int>();
 
+    private PlayerHealth cachedPlayerHealth;
+    private PlayerStats cachedPlayerStats;
+
     public event Action<UpgradeData, int> OnUpgradePurchased;
 
     private void Awake()
@@ -28,6 +31,15 @@ public class UpgradeManager : MonoBehaviour
     {
         if (Instance == this)
             Instance = null;
+    }
+
+    private void CachePlayerComponents()
+    {
+        if (cachedPlayerHealth != null && cachedPlayerStats != null) return;
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player == null) return;
+        cachedPlayerHealth = player.GetComponent<PlayerHealth>();
+        cachedPlayerStats  = player.GetComponent<PlayerStats>();
     }
 
     public int GetLevel(UpgradeData data)
@@ -50,6 +62,7 @@ public class UpgradeManager : MonoBehaviour
         int newLevel = GetLevel(data) + 1;
         purchasedLevels[data] = newLevel;
 
+        CachePlayerComponents();
         ApplyUpgrade(data);
         AudioManager.Instance?.PlayLevelUp();
         OnUpgradePurchased?.Invoke(data, newLevel);
@@ -58,27 +71,30 @@ public class UpgradeManager : MonoBehaviour
 
     private void ApplyUpgrade(UpgradeData data)
     {
-        PlayerStats stats = PlayerStats.Instance;
-        if (stats == null) return;
+        if (cachedPlayerStats == null) return;
 
         switch (data.upgradeType)
         {
             case UpgradeData.UpgradeType.DamageBoost:
-                stats.AddDamageBoost(data.upgradeValue);
+                cachedPlayerStats.AddDamageBoost(data.upgradeValue);
                 break;
             case UpgradeData.UpgradeType.AttackSpeedBoost:
-                stats.AddAttackSpeedBoost(1f + data.upgradeValue / 100f);
+                cachedPlayerStats.AddAttackSpeedBoost(1f + data.upgradeValue / 100f);
                 break;
             case UpgradeData.UpgradeType.MaxHPBoost:
-                stats.AddMaxHealthBoost(data.upgradeValue);
-                GameObject player = GameObject.FindGameObjectWithTag("Player");
-                player?.GetComponent<PlayerHealth>()?.Heal(data.upgradeValue);
+                cachedPlayerStats.AddMaxHealthBoost(data.upgradeValue);
+                // Increase the health component's max and heal the player for the added amount
+                if (cachedPlayerHealth != null)
+                {
+                    cachedPlayerHealth.SetMaxHealth(cachedPlayerStats.TotalMaxHealth);
+                    cachedPlayerHealth.Heal(data.upgradeValue);
+                }
                 break;
             case UpgradeData.UpgradeType.DashCooldownReduction:
-                stats.ReduceDashCooldown(data.upgradeValue);
+                cachedPlayerStats.ReduceDashCooldown(data.upgradeValue);
                 break;
             case UpgradeData.UpgradeType.DefenseBoost:
-                stats.AddDefenseBoost(data.upgradeValue / 100f);
+                cachedPlayerStats.AddDefenseBoost(data.upgradeValue / 100f);
                 break;
         }
     }

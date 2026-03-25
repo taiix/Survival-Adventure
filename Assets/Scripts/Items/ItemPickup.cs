@@ -32,7 +32,7 @@ public class ItemPickup : MonoBehaviour, IInteractable
 
         // Bob and rotate
         float newY = startPosition.y + Mathf.Sin(Time.time * bobSpeed) * bobHeight;
-        transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+        transform.position = new Vector3(startPosition.x, newY, startPosition.z);
         transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
 
         if (autoPickup)
