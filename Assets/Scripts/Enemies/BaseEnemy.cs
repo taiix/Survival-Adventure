@@ -19,6 +19,13 @@ public abstract class BaseEnemy : MonoBehaviour, IDamageable
     [SerializeField] protected float maxWaitTime = 5f;
     [SerializeField] private bool canPatrol = true;
 
+    [Header("Death")]
+    [SerializeField] protected int goldDrop = 5;
+    [SerializeField] private GameObject deathEffectPrefab;
+
+    /// <summary>Fired when this enemy dies. Useful for wave/zone spawners.</summary>
+    public System.Action<BaseEnemy> OnEnemyDied;
+
     [Header("Animator")]
     [SerializeField, Range(0f, 1f)] protected float sprintThreshold = 0.5f;
     [SerializeField, Min(0.01f)] private float speedSmoothTime = 0.1f;
@@ -28,6 +35,9 @@ public abstract class BaseEnemy : MonoBehaviour, IDamageable
 
     protected float currentHealth;
     protected float lastAttackTime;
+
+    /// <summary>Current health as a 0–1 ratio (useful for health bars).</summary>
+    public float HealthRatio => maxHealth > 0f ? Mathf.Clamp01(currentHealth / maxHealth) : 0f;
     protected Transform playerTransform;
     protected NavMeshAgent navMeshAgent;
     protected Animator animator;
@@ -258,6 +268,18 @@ public abstract class BaseEnemy : MonoBehaviour, IDamageable
 
     protected virtual void Die()
     {
+        OnEnemyDied?.Invoke(this);
+
+        // Drop gold reward
+        if (goldDrop > 0)
+            GoldManager.Instance?.AddGold(goldDrop);
+
+        // Spawn death particle effect
+        if (deathEffectPrefab != null)
+            Instantiate(deathEffectPrefab, transform.position, Quaternion.identity);
+
+        AudioManager.Instance?.PlayEnemyHit();
+
         Destroy(gameObject);
     }
 

@@ -9,6 +9,7 @@ public sealed class PlayerHealth : MonoBehaviour, IDamageable
     [SerializeField] private float currentHealth;
 
     private HitFeedback hitFeedback;
+    private PlayerStats playerStats;
     public float MaxHealth => maxHealth;
     public float CurrentHealth { get; private set; }
     public bool IsAlive => CurrentHealth > 0f;
@@ -19,8 +20,18 @@ public sealed class PlayerHealth : MonoBehaviour, IDamageable
     private void Awake()
     {
         hitFeedback = GetComponent<HitFeedback>();
+        playerStats = GetComponent<PlayerStats>();
         CurrentHealth = maxHealth;
         currentHealth = CurrentHealth;
+    }
+
+    /// <summary>Sets a new max health ceiling (e.g. after an HP upgrade).</summary>
+    public void SetMaxHealth(float newMax)
+    {
+        maxHealth = Mathf.Max(1f, newMax);
+        CurrentHealth = Mathf.Min(CurrentHealth, maxHealth);
+        currentHealth = CurrentHealth;
+        OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
     }
 
     public void TakeDamage(float amount)
@@ -30,11 +41,15 @@ public sealed class PlayerHealth : MonoBehaviour, IDamageable
             return;
         }
 
-        CurrentHealth = Mathf.Max(0f, CurrentHealth - amount);
+        // Apply defense reduction if PlayerStats is present
+        float mitigatedAmount = playerStats != null ? playerStats.ApplyDefense(amount) : amount;
+
+        CurrentHealth = Mathf.Max(0f, CurrentHealth - mitigatedAmount);
         OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
         currentHealth = CurrentHealth;
 
         hitFeedback.PlayHitFeedback();
+        AudioManager.Instance?.PlayPlayerHit();
         if (!IsAlive)
         {
             OnDeath?.Invoke();

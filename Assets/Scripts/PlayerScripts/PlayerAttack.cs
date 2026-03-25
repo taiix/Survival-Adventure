@@ -9,6 +9,7 @@ public class PlayerAttack : MonoBehaviour
     private Animator animator;
     private PlayerInputHandler inputHandler;
     private PlayerStateManager stateManager;
+    private PlayerStats playerStats;
     private bool previousAttackPressed;
 
     public void Initialize(PlayerInputHandler inputHandler, PlayerStateManager stateManager)
@@ -16,6 +17,7 @@ public class PlayerAttack : MonoBehaviour
         this.inputHandler = inputHandler;
         this.stateManager = stateManager;
         animator = GetComponent<Animator>();
+        playerStats = GetComponent<PlayerStats>();
     }
 
     private void Update()
@@ -44,6 +46,8 @@ public class PlayerAttack : MonoBehaviour
             animator.SetTrigger("Attack");
         }
 
+        AudioManager.Instance?.PlaySwordSwing();
+
         // Attack completes immediately, return to Normal state
         stateManager.SetState(PlayerState.Normal);
     }
@@ -54,6 +58,8 @@ public class PlayerAttack : MonoBehaviour
         {
             return;
         }
+
+        float damage = playerStats != null ? playerStats.TotalDamage : attackDamage;
 
         Collider[] hitColliders = Physics.OverlapSphere(
             swordCollider.bounds.center,
@@ -69,7 +75,7 @@ public class PlayerAttack : MonoBehaviour
             IDamageable damageable = hitCollider.GetComponent<IDamageable>();
             if (damageable != null)
             {
-                damageable.TakeDamage(attackDamage);
+                damageable.TakeDamage(damage);
             }
         }
     }
