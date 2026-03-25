@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
@@ -265,6 +265,7 @@ public sealed class PlayerController : MonoBehaviour
 
     public InputAction GetInputAction(string actionKey) => inputHandler.GetInputAction(actionKey);
     public PlayerStateManager GetStateManager() => stateManager;
+    public PlayerStaminaController GetStaminaController() => staminaController;
 
     private void OnDrawGizmosSelected()
     {
