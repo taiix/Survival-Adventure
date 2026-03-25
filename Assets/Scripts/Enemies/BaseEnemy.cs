@@ -208,12 +208,18 @@ public abstract class BaseEnemy : MonoBehaviour, IDamageable
             }
         }
 
+        // Clamp target speed BEFORE smoothing
+        targetSpeed = Mathf.Clamp01(targetSpeed);
+
         // Smoothly interpolate the animator speed parameter
         currentAnimatorSpeed = Mathf.SmoothDamp(
             currentAnimatorSpeed,
             targetSpeed,
             ref animatorSpeedVelocity,
             speedSmoothTime);
+
+        // Clamp after smooth damp (critical!)
+        currentAnimatorSpeed = Mathf.Clamp01(currentAnimatorSpeed);
 
         animator.SetFloat("Speed", currentAnimatorSpeed);
     }
