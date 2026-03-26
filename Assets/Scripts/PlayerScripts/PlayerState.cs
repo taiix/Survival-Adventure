@@ -7,5 +7,6 @@ public enum PlayerState
     Interacting,
     Attacking,
     Dashing,
+    Stunned,
     Dead
 }
