@@ -1,21 +1,25 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class PlayerAttack : MonoBehaviour
 {
-    [SerializeField] private float attackDamage = 10f;
     [SerializeField] private Collider swordCollider;
 
     private Animator animator;
     private PlayerInputHandler inputHandler;
     private PlayerStateManager stateManager;
     private bool previousAttackPressed;
+    private PlayerStats playerStats;
 
     public void Initialize(PlayerInputHandler inputHandler, PlayerStateManager stateManager)
     {
         this.inputHandler = inputHandler;
         this.stateManager = stateManager;
         animator = GetComponent<Animator>();
+    }
+
+    private void Awake()
+    {
+        playerStats = GetComponent<PlayerStats>();
     }
 
     private void Update()
@@ -69,7 +73,7 @@ public class PlayerAttack : MonoBehaviour
             IDamageable damageable = hitCollider.GetComponent<IDamageable>();
             if (damageable != null)
             {
-                damageable.TakeDamage(attackDamage);
+                damageable.TakeDamage(playerStats.GetCurrentDamage());
             }
         }
     }

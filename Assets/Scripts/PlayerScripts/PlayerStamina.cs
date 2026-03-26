@@ -25,8 +25,6 @@ public sealed class PlayerStamina
     public float CurrentStamina => currentStamina;
     public bool HasStamina => currentStamina > 0f;
 
-    public event Action<float, float> OnStaminaChanged;
-
     public void UseStamina(float deltaTime)
     {
         if (currentStamina <= 0f)
@@ -36,7 +34,7 @@ public sealed class PlayerStamina
 
         currentStamina = Math.Max(0f, currentStamina - drainRate * deltaTime);
         timeSinceLastDrain = 0f;
-        OnStaminaChanged?.Invoke(currentStamina, maxStamina);
+        EventManager.OnPlayerStaminaChanged?.Invoke(currentStamina);
     }
 
     public void Update(float deltaTime)
@@ -49,6 +47,6 @@ public sealed class PlayerStamina
         }
 
         currentStamina = Math.Min(maxStamina, currentStamina + regenRate * deltaTime);
-        OnStaminaChanged?.Invoke(currentStamina, maxStamina);
+        EventManager.OnPlayerStaminaChanged?.Invoke(currentStamina);
     }
 }

@@ -44,12 +44,10 @@ public class PlayerInteraction : MonoBehaviour
 
         if (isInteractPressed && !previousInteractPressed)
         {
-            // Only interact if we have a target and not already interacting with something else
             if (currentTarget != null && !stateManager.IsState(PlayerState.Interacting))
             {
                 TryInteract();
             }
-            // If already interacting with this target, toggle the UI off
             else if (stateManager.IsState(PlayerState.Interacting) && activeInteractable == currentTarget)
             {
                 CloseInteraction();

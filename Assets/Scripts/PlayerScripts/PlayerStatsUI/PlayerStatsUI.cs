@@ -1,53 +1,31 @@
+using System;
 using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine.UI;
 
 public class PlayerStatsUI : MonoBehaviour
 {
-    [SerializeField] private UIDocument uiDocument;
-    
-    private VisualElement staminaFill;
-    private PlayerController playerController;
+    [SerializeField] private Slider healthSlider;
+    [SerializeField] private Slider staminaSlider;
 
-    void Start()
+    private void OnEnable()
     {
-        if (uiDocument == null)
-        {
-            uiDocument = GetComponent<UIDocument>();
-        }
-
-        if (uiDocument == null)
-        {
-            Debug.LogError("UIDocument not found on PlayerStatsUI GameObject");
-            return;
-        }
-
-        var root = uiDocument.rootVisualElement;
-        staminaFill = root.Q<VisualElement>("StaminaFill");
-
-        if (staminaFill == null)
-        {
-            Debug.LogError("StaminaFill element not found in UI");
-            return;
-        }
-
-        playerController = FindObjectOfType<PlayerController>();
-        if (playerController == null)
-        {
-            Debug.LogError("PlayerController not found in scene");
-            return;
-        }
+        EventManager.OnPlayerHealthChanged.AddListener(UpdateHealthUI);
+        EventManager.OnPlayerStaminaChanged.AddListener(UpdateStaminaUI);
     }
 
-    void Update()
+    private void OnDisable()
     {
-        if (playerController == null || staminaFill == null)
-        {
-            return;
-        }
+        EventManager.OnPlayerHealthChanged.RemoveListener(UpdateHealthUI);
+        EventManager.OnPlayerStaminaChanged.RemoveListener(UpdateStaminaUI);
+    }
 
-        float staminaPercent = playerController.GetStaminaController().CurrentStamina / 
-                               playerController.GetStaminaController().MaxStamina;
-        
-        staminaFill.style.height = new Length(staminaPercent * 100f, LengthUnit.Percent);
+    private void UpdateHealthUI(float currentHealth)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void UpdateStaminaUI(float currentStamina)
+    {
+        staminaSlider.value = currentStamina;
     }
 }

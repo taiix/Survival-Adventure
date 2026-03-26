@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public sealed class PlayerStaminaController
 {
     private readonly PlayerStamina stamina;
