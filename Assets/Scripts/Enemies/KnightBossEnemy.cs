@@ -5,43 +5,60 @@ public class KnightBossEnemy : BaseEnemy
     [Header("Attacks")]
     [SerializeField] private Collider swordCollider;
 
+    [Header("Special Attack")]
+    [SerializeField, Range(0f, 1f)] private float specialAttackChance = 0.25f;
+    [SerializeField, Min(0f)] private float specialAttackCooldown = 6f;
+    [SerializeField] private string specialAttackTriggerName = "SpecialAttack";
+    [SerializeField, Min(0f)] private float specialAttackRange = 12f;
+
+    [Header("Special Attack FX (spawned)")]
+    [SerializeField] private GameObject specialAttackFxPrefab;
+    [SerializeField] private GameObject specialAttackChargeFxPrefab;
+    [SerializeField] private Transform specialAttackFxSpawnPoint;
+    [SerializeField, Min(0.1f)] private float specialAttackFxLifetime = 2.5f;
+
+    [Header("Special Attack Hitbox")]
+    [SerializeField] private KnightBossSpecialAttackHitbox rockTrailHitbox;
+
     private readonly int runtimeStateHash = Animator.StringToHash("Base Layer.KnightBossQuickAttack");
     private readonly int speedHash = Animator.StringToHash("Speed");
+    private readonly int specialAttackStateHash = Animator.StringToHash("Base Layer.KnightBossSpecialAttack");
+    private readonly int inMeleeRangeHash = Animator.StringToHash("InMeleeRange");
 
-    // When normalizedTime reaches this value, we consider the attack "done enough" to resume AI decisions.
     private const float AttackAnimationExitTime = 0.95f;
 
-    protected override void Awake()
-    {
-        base.Awake();
-    }
+    private float nextSpecialAttackTime;
+    private bool isSpecialAttackInProgress;
+
+    // Prevent multiple spawns if the FX cue event fires more than once.
+    private bool specialFxPlayedThisAttack;
 
     protected override void UpdateBehavior()
     {
         AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-        bool isInAttackAnimation = stateInfo.fullPathHash == runtimeStateHash;
-        bool isAttackActive = currentState == AIState.Attack || isInAttackAnimation;
 
-        // While attack is active, never move. Once the animation is basically done, decide next action.
+        bool isInQuickAttackAnimation = stateInfo.fullPathHash == runtimeStateHash;
+        bool isInSpecialAttackAnimation = stateInfo.fullPathHash == specialAttackStateHash;
+
+        bool isAttackActive =
+            currentState == AIState.Attack ||
+            isInQuickAttackAnimation ||
+            isInSpecialAttackAnimation ||
+            isSpecialAttackInProgress;
+
         if (isAttackActive)
         {
             StopMovement();
             FacePlayer();
 
-            // Still in the middle of the animation -> keep locking movement.
-            if (isInAttackAnimation && stateInfo.normalizedTime < AttackAnimationExitTime)
+            // Keep locking movement during the animation.
+            if ((isInQuickAttackAnimation || isInSpecialAttackAnimation) &&
+                stateInfo.normalizedTime < AttackAnimationExitTime)
             {
                 return;
             }
 
-            // Attack animation finished (or we left the state). Decide what to do next.
-            if (IsPlayerInAttackRange())
-            {
-                currentState = AIState.Attack;
-                Attack(); // cooldown in BaseEnemy prevents spamming
-                return;
-            }
-
+            // After the animation is basically done, decide what to do next.
             if (IsPlayerInDetectionRange())
             {
                 currentState = AIState.Chase;
@@ -51,12 +68,10 @@ public class KnightBossEnemy : BaseEnemy
                 return;
             }
 
-            // Player not detected anymore -> fall back to patrol
             HandlePatrolState();
             return;
         }
 
-        // Normal behavior when not attacking
         if (IsPlayerInDetectionRange())
         {
             HandleCombatState();
@@ -69,7 +84,10 @@ public class KnightBossEnemy : BaseEnemy
 
     protected override void HandleCombatState()
     {
-        // Attack or chase logic
+        // Priority:
+        // 1) If in melee range -> normal Attack() (quick attack)
+        // 2) Else if in special range -> maybe special
+        // 3) Else -> chase
         if (IsPlayerInAttackRange())
         {
             if (currentState != AIState.Attack)
@@ -79,40 +97,146 @@ public class KnightBossEnemy : BaseEnemy
             }
 
             FacePlayer();
-            Attack();
+            base.Attack();
+            return;
         }
-        else
-        {
-            // Player is out of attack range - start chasing
-            if (currentState != AIState.Chase)
-            {
-                currentState = AIState.Chase;
-                navMeshAgent.speed = chasingSpeed;
-                navMeshAgent.isStopped = false;
-            }
 
-            FacePlayer();
+        if (IsPlayerInSpecialAttackRange())
+        {
+            // Special can be used at range; if we fail to use it, we chase (no melee attack here).
+            if (CanUseSpecialAttack() && RollSpecialAttack())
+            {
+                currentState = AIState.Attack;
+                StopMovement();
+                FacePlayer();
+                StartSpecialAttack();
+                return;
+            }
+        }
+
+        // Chase when not in melee, and also when special is unavailable/failed roll.
+        if (currentState != AIState.Chase)
+        {
+            currentState = AIState.Chase;
+            navMeshAgent.speed = chasingSpeed;
+            navMeshAgent.isStopped = false;
+        }
+
+        FacePlayer();
+        navMeshAgent.SetDestination(playerTransform.position);
+    }
+
+    private bool IsPlayerInSpecialAttackRange()
+    {
+        return playerTransform != null &&
+               Vector3.Distance(transform.position, playerTransform.position) <= specialAttackRange;
+    }
+
+    private bool CanUseSpecialAttack() => Time.time >= nextSpecialAttackTime;
+
+    private bool RollSpecialAttack() => Random.value <= specialAttackChance;
+
+    private void StartSpecialAttack()
+    {
+        // Use base cooldown gate too (prevents starting another attack immediately).
+        lastAttackTime = Time.time;
+
+        nextSpecialAttackTime = Time.time + specialAttackCooldown;
+        isSpecialAttackInProgress = true;
+        specialFxPlayedThisAttack = false;
+
+        if (animator != null && !string.IsNullOrWhiteSpace(specialAttackTriggerName))
+        {
+            animator.ResetTrigger(specialAttackTriggerName);
+            animator.SetTrigger(specialAttackTriggerName);
+
+            specialAttackChargeFxPrefab.SetActive(true);
+        }
+    }
+
+
+    public void OnSpecialAttackFxCue()
+    {
+        if (!isSpecialAttackInProgress || specialFxPlayedThisAttack)
+        {
+            return;
+        }
+
+        specialFxPlayedThisAttack = true;
+
+        SpawnSpecialAttackFx();
+
+        if (rockTrailHitbox != null)
+        {
+            rockTrailHitbox.Play();
+        }
+    }
+
+    // Animation Event: call on the LAST frame (or near end) to unlock AI and allow chase/other actions.
+    public void OnSpecialAttackAnimationFinished()
+    {
+        if (!isSpecialAttackInProgress)
+        {
+            return;
+        }
+
+        isSpecialAttackInProgress = false;
+
+        // Always unstop here to prevent "idle stuck" if AI doesn't tick chase immediately.
+        navMeshAgent.isStopped = false;
+
+        if (IsPlayerInDetectionRange())
+        {
+            currentState = AIState.Chase;
+            navMeshAgent.speed = chasingSpeed;
             navMeshAgent.SetDestination(playerTransform.position);
         }
+    }
+
+    private void SpawnSpecialAttackFx()
+    {
+        if (specialAttackFxPrefab == null)
+        {
+            return;
+        }
+
+        Transform spawn = specialAttackFxSpawnPoint != null ? specialAttackFxSpawnPoint : transform;
+
+        GameObject fxInstance = Instantiate(
+            specialAttackFxPrefab,
+            spawn.position,
+            spawn.rotation);
+
+        Destroy(fxInstance, specialAttackFxLifetime);
+        specialAttackChargeFxPrefab.SetActive(false);
     }
 
     protected override void UpdateAnimator()
     {
         if (animator == null || navMeshAgent == null)
+        {
             return;
+        }
+
+        // Drive Animator melee-range bool for chaining logic
+        animator.SetBool(inMeleeRangeHash, IsPlayerInAttackRange());
 
         AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-        bool isInAttackAnimation = stateInfo.fullPathHash == runtimeStateHash;
-        bool isAttackActive = currentState == AIState.Attack || isInAttackAnimation;
+        bool isInQuickAttackAnimation = stateInfo.fullPathHash == runtimeStateHash;
+        bool isInSpecialAttackAnimation = stateInfo.fullPathHash == specialAttackStateHash;
 
-        // During attack (including transitions), don't let blend tree fall to 0 (prevents snapping to idle).
+        bool isAttackActive =
+            currentState == AIState.Attack ||
+            isInQuickAttackAnimation ||
+            isInSpecialAttackAnimation ||
+            isSpecialAttackInProgress;
+
         if (isAttackActive)
         {
             animator.SetFloat(speedHash, 0.1f);
             return;
         }
 
-        // For chase/patrol, calculate speed based on NavMeshAgent velocity
         if (currentState == AIState.Chase || currentState == AIState.Patrol)
         {
             float speed = navMeshAgent.velocity.magnitude;

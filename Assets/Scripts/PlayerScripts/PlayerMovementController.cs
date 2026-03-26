@@ -2,6 +2,9 @@ using UnityEngine;
 
 public sealed class PlayerMovementController
 {
+    private const string inAirBoolName = "InAir";
+    private const string verticalSpeedFloatName = "VerticalSpeed";
+
     private readonly CharacterController characterController;
     private readonly Animator animator;
     private readonly PlayerMotor playerMotor;
@@ -41,7 +44,7 @@ public sealed class PlayerMovementController
         this.smoothRotation = smoothRotation;
         this.jumpHeight = jumpHeight;
         this.gravity = gravity;
-        this.sprintThreshold = 0.5f;
+        sprintThreshold = 0.5f;
 
         playerMotor = new PlayerMotor(characterController, playerTransform, turnAngle);
         waterDetection = new PlayerWaterDetection(sphereDistance, sphereYOffset, sphereRadius, raycastDistance);
@@ -53,12 +56,24 @@ public sealed class PlayerMovementController
 
         float moveSpeed = isSprinting ? sprintSpeed : walkSpeed;
         HandleMovement(inputHandler, moveSpeed, deltaTime);
+
+        UpdateAirStateAnimatorParams();
         UpdateAnimator(inputHandler, isSprinting);
+    }
+
+    private void UpdateAirStateAnimatorParams()
+    {
+        if (animator == null)
+        {
+            return;
+        }
+
+        bool inAir = !playerMotor.IsGrounded;
+        animator.SetBool(inAirBoolName, inAir);
     }
 
     public void Idle()
     {
-        // Reset animation to idle
         if (animator != null)
         {
             animator.SetFloat("Speed", 0f);
@@ -88,6 +103,8 @@ public sealed class PlayerMovementController
 
         if (!waterDetection.IsDetectingWater(characterController.transform))
         {
+            bool wasGrounded = playerMotor.IsGrounded;
+
             playerMotor.Move(
                 inputHandler.MoveInput,
                 moveSpeed,
@@ -95,6 +112,9 @@ public sealed class PlayerMovementController
                 deltaTime,
                 jumpPressedThisFrame,
                 jumpHeight);
+
+            // Fire the trigger only when we just left the ground due to a jump input.
+            bool isNowInAir = !playerMotor.IsGrounded;
         }
 
         previousJumpPressed = inputHandler.IsJumping;

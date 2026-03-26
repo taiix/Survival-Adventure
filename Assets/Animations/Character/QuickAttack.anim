@@ -6,7 +6,7 @@ AnimationClip:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Attack
+  m_Name: QuickAttack
   serializedVersion: 7
   m_Legacy: 0
   m_Compressed: 0
@@ -8456,5 +8456,12 @@ AnimationClip:
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 10
+    intParameter: 0
+    messageOptions: 0
+  - time: 0.41666666
+    functionName: OnQuickAttackFinished
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
     intParameter: 0
     messageOptions: 0
