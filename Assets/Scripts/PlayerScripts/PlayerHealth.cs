@@ -40,7 +40,7 @@ public sealed class PlayerHealth : MonoBehaviour, IDamageable
         }
 
         CurrentHealth = Mathf.Max(0f, CurrentHealth - amount);
-        OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
+        EventManager.OnPlayerHealthChanged?.Invoke(CurrentHealth);
         currentHealth = CurrentHealth;
 
         hitFeedback.PlayHitFeedback();
@@ -58,6 +58,6 @@ public sealed class PlayerHealth : MonoBehaviour, IDamageable
         }
 
         CurrentHealth = Mathf.Min(maxHealth, CurrentHealth + amount);
-        OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
+        EventManager.OnPlayerHealthChanged?.Invoke(CurrentHealth);
     }
 }
