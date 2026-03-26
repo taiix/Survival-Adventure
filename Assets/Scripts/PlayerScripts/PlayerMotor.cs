@@ -19,6 +19,9 @@ public sealed class PlayerMotor
         targetRotation = playerTransform.rotation;
     }
 
+    public bool IsGrounded => characterController != null && characterController.isGrounded;
+    public float VerticalVelocity => verticalVelocity;
+
     public void ResetInputState()
     {
         targetRotation = playerTransform.rotation;
