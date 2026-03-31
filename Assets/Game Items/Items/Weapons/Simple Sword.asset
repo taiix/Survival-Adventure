@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Simple Sword
   m_EditorClassIdentifier: Assembly-CSharp::WeaponItem
   itemName: Simple Sword
-  itemIcon: {fileID: 21300000, guid: 313575448f2d25a45be7d327cd6206e7, type: 3}
+  itemIcon: {fileID: 21300000, guid: 91944603cb18b934392ff50276e577d3, type: 3}
   price: 10
   minDamage: 23
   maxDamage: 29

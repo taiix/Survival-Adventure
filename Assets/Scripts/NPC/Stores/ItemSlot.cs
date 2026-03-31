@@ -8,7 +8,13 @@ public class ItemSlot : MonoBehaviour
 
     private void OnEnable()
     {
-        if (sprite == null) return;
-        sprite.sprite = item.itemIcon;
+        if (sprite == null) sprite = transform.GetChild(0).GetComponent<Image>();
+        if (item != null) sprite.sprite = item.itemIcon;
+    }
+
+    public Transform GetSlotPosition()
+    {
+        if (sprite == null) return null;
+        return sprite.rectTransform;
     }
 }
