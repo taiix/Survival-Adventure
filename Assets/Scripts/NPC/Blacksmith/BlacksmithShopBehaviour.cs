@@ -1,41 +1,68 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BlacksmithShopBehaviour : MonoBehaviour
+public class BlacksmithShopBehaviour : GridNavigationBehaviour
 {
     [SerializeField] private List<ItemSlot> itemSlots;
-    private void Awake()
-    {
-        GetAllItemSlots(this.gameObject.transform);
-    }
-    private void OnEnable()
-    {
-        //When the shop is opened
-        itemSlots = new();
-        GetAllItemSlots(this.gameObject.transform);
-    }
 
-    private void OnDisable()
+    protected override void RefreshSlots()
     {
-        //when the shop is closed
-        itemSlots.Clear();
-    }
-
-
-    private void GetAllItemSlots(Transform parent)
-    {
-        for (int i = 0; i < parent.childCount; i++)
+        if (itemSlots == null)
         {
-            Debug.Log(i);
-            parent = parent.GetChild(i);
-
-            foreach (Transform child in parent)
-            {
-                if (child.TryGetComponent(out ItemSlot slot))
-                {
-                    itemSlots.Add(slot);
-                }
-            }
+            itemSlots = new List<ItemSlot>();
         }
+        else
+        {
+            itemSlots.Clear();
+        }
+
+        itemSlots.AddRange(GetComponentsInChildren<ItemSlot>(true));
+        Debug.Log($"BlacksmithShop: Found {itemSlots.Count} item slots");
+    }
+
+    protected override int GetSlotCount()
+    {
+        return itemSlots?.Count ?? 0;
+    }
+
+    protected override bool IsValidSlotIndex(int index)
+    {
+        return index >= 0 && index < GetSlotCount();
+    }
+
+    protected override bool IsValidSlot(int index)
+    {
+        if (!IsValidSlotIndex(index))
+        {
+            return false;
+        }
+
+        ItemSlot slot = itemSlots[index];
+        if (slot == null)
+        {
+            return false;
+        }
+
+        Transform slotPosition = slot.GetSlotPosition();
+        return slotPosition != null;
+    }
+
+    protected override void OnSlotSelected(int index)
+    {
+        if (slotSelector == null)
+        {
+            Debug.LogError("BlacksmithShop: slotSelector is null!");
+            return;
+        }
+
+        if (!IsValidSlot(index))
+        {
+            Debug.LogWarning($"BlacksmithShop: slot at index {index} is invalid!");
+            return;
+        }
+
+        Transform slotPosition = itemSlots[index].GetSlotPosition();
+        slotSelector.rectTransform.position = slotPosition.position;
+        Debug.Log($"BlacksmithShop: moved selector to slot {index}");
     }
 }
