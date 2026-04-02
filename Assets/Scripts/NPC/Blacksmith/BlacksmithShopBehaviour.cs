@@ -4,6 +4,9 @@ using UnityEngine;
 public class BlacksmithShopBehaviour : GridNavigationBehaviour
 {
     [SerializeField] private List<ItemSlot> itemSlots;
+    [SerializeField] private UpgradeDescription upgradeDescription;
+
+    private ItemBase selectedSlot;
 
     protected override void RefreshSlots()
     {
@@ -17,6 +20,22 @@ public class BlacksmithShopBehaviour : GridNavigationBehaviour
         }
 
         itemSlots.AddRange(GetComponentsInChildren<ItemSlot>(true));
+        
+        if (itemSlots.Count > 0)
+        {
+            selectedSlot = itemSlots[0].GetItem();
+            // Update the upgrade description with the first item
+            if (upgradeDescription != null && selectedSlot != null)
+            {
+                upgradeDescription.SetCurrentItem(selectedSlot);
+                Debug.Log($"BlacksmithShop: Initial item set to {selectedSlot.itemName}");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("BlacksmithShop: No item slots found!");
+        }
+
         Debug.Log($"BlacksmithShop: Found {itemSlots.Count} item slots");
     }
 
@@ -63,6 +82,21 @@ public class BlacksmithShopBehaviour : GridNavigationBehaviour
 
         Transform slotPosition = itemSlots[index].GetSlotPosition();
         slotSelector.rectTransform.position = slotPosition.position;
-        Debug.Log($"BlacksmithShop: moved selector to slot {index}");
+        selectedSlot = itemSlots[index].GetItem();
+
+        if (selectedSlot != null)
+        {
+            if (upgradeDescription != null)
+            {
+                upgradeDescription.SetCurrentItem(selectedSlot);
+                Debug.Log($"BlacksmithShop: Selected item {selectedSlot.itemName}");
+            }
+            else
+            {
+                Debug.LogWarning("BlacksmithShop: UpgradeDescription not assigned!");
+            }
+
+            ShopEvents.OnSlotSelected?.Invoke(selectedSlot);
+        }
     }
 }

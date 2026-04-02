@@ -15,6 +15,7 @@ public sealed class PlayerInputHandler
     private const string attackInputKey = "Attack";
     private const string jumpInputKey = "Jump";
     private const string dashInputKey = "Dash";
+    private const string upgradeInputKey = "Upgrade";
 
     private readonly InputActionAsset actionAsset;
     private readonly string keyboardActionMapName;
@@ -56,6 +57,7 @@ public sealed class PlayerInputHandler
         RegisterInput(jumpInputKey, jumpActionName, jumpActionName, false, false);
         RegisterInput(dashInputKey, "Dash", "Dash", false, false);
         RegisterInput("Interact", "Interact", "Interact", false, false);
+        RegisterInput(upgradeInputKey, "Upgrade", "Upgrade", false, false);
 
         ResolveActions();
     }

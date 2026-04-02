@@ -15,6 +15,9 @@ MonoBehaviour:
   itemName: Simple Sword
   itemIcon: {fileID: 21300000, guid: 91944603cb18b934392ff50276e577d3, type: 3}
   price: 10
-  minDamage: 23
-  maxDamage: 29
+  upgradeCostMultiplier: 1.5
+  upgradeStatMultiplier: 1.2
+  currentUpgradeLevel: 3
+  minDamage: 102
+  maxDamage: 124
   attackSpeed: 1

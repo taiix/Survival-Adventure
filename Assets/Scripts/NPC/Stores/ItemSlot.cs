@@ -12,9 +12,18 @@ public class ItemSlot : MonoBehaviour
         if (item != null) sprite.sprite = item.itemIcon;
     }
 
+    private void Upgrade() { 
+        UpgradeEvents.OnUpgradePurchased?.Invoke();
+    }
+
     public Transform GetSlotPosition()
     {
         if (sprite == null) return null;
         return sprite.rectTransform;
+    }
+
+    public ItemBase GetItem()
+    {
+        return item;
     }
 }

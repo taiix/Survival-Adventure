@@ -162,7 +162,6 @@ public sealed class PlayerController : MonoBehaviour
             return;
         }
 
-        // 1) Ground-only dash
         if (!characterController.isGrounded)
         {
             return;
@@ -173,7 +172,6 @@ public sealed class PlayerController : MonoBehaviour
             return;
         }
 
-        // 2) Don't start a dash if we would dash into water (using your existing detection logic)
         if (waterDetection != null && waterDetection.IsDetectingWater(transform))
         {
             return;
@@ -222,7 +220,6 @@ public sealed class PlayerController : MonoBehaviour
             return;
         }
 
-        // If water is detected during dash, end immediately to avoid getting stuck.
         if (waterDetection != null && waterDetection.IsDetectingWater(transform))
         {
             dashTimeRemaining = 0f;
@@ -263,9 +260,22 @@ public sealed class PlayerController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Returns the PlayerInputHandler for access by services
+    /// </summary>
+    public PlayerInputHandler GetInputHandler()
+    {
+        if (inputHandler == null)
+        {
+            Debug.LogError("PlayerController: GetInputHandler() called but inputHandler is null!");
+        }
+        return inputHandler;
+    }
+
     public InputAction GetInputAction(string actionKey) => inputHandler.GetInputAction(actionKey);
     public PlayerStateManager GetStateManager() => stateManager;
     public PlayerStaminaController GetStaminaController() => staminaController;
+  
     private void OnDrawGizmosSelected()
     {
         Vector3 p = transform.position + transform.forward * sphereDistance + Vector3.up * sphereYOffset;

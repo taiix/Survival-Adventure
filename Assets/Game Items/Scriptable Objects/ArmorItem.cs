@@ -8,4 +8,10 @@ public class ArmorItem : ItemBase
     public int defense;
     public int maxHealthBonus;
 
+    public override void ApplyUpgrade()
+    {
+        currentUpgradeLevel++;
+        defense = Mathf.RoundToInt(defense * upgradeStatMultiplier);
+        maxHealthBonus = Mathf.RoundToInt(maxHealthBonus * upgradeStatMultiplier);
+    }
 }

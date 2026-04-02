@@ -142,5 +142,4 @@ public abstract class GridNavigationBehaviour : MonoBehaviour
     protected abstract bool IsValidSlotIndex(int index);
     protected abstract bool IsValidSlot(int index);
     protected abstract void OnSlotSelected(int index);
-
 }

@@ -7,6 +7,12 @@ public class WeaponItem : ItemBase
     [Header("Weapon Specific")]
     public int minDamage;
     public int maxDamage;
-
     public float attackSpeed;
+
+    public override void ApplyUpgrade()
+    {
+        currentUpgradeLevel++;
+        minDamage = Mathf.RoundToInt(minDamage * upgradeStatMultiplier);
+        maxDamage = Mathf.RoundToInt(maxDamage * upgradeStatMultiplier);
+    }
 }
