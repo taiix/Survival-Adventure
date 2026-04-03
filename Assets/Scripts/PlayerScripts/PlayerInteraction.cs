@@ -75,7 +75,11 @@ public class PlayerInteraction : MonoBehaviour
 
     private void CloseInteraction()
     {
-        if (activeUI != null)
+        if (activeInteractable is NPC_Interaction npcInteraction)
+        {
+            npcInteraction.EndInteraction();
+        }
+        else if (activeUI != null)
         {
             activeUI.SetActive(false);
         }

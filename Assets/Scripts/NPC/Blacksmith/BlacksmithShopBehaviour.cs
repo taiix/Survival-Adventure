@@ -6,7 +6,25 @@ public class BlacksmithShopBehaviour : GridNavigationBehaviour
     [SerializeField] private List<ItemSlot> itemSlots;
     [SerializeField] private UpgradeDescription upgradeDescription;
 
-    private ItemBase selectedSlot;
+    private ItemBase selectedItem;
+    private IUpgradeService upgradeService;
+
+    private void OnEnable()
+    {
+        RefreshSlots();
+        SelectFirstValidSlot();
+        upgradeService = ServiceLocator.GetUpgradeService();
+
+        if (upgradeService == null)
+        {
+            Debug.LogWarning("BlacksmithShopBehaviour: UpgradeService not found in ServiceLocator!");
+        }
+    }
+
+    private void OnDisable()
+    {
+        selectedItem = null;
+    }
 
     protected override void RefreshSlots()
     {
@@ -21,82 +39,55 @@ public class BlacksmithShopBehaviour : GridNavigationBehaviour
 
         itemSlots.AddRange(GetComponentsInChildren<ItemSlot>(true));
         
-        if (itemSlots.Count > 0)
+        if (itemSlots.Count == 0)
         {
-            selectedSlot = itemSlots[0].GetItem();
-            // Update the upgrade description with the first item
-            if (upgradeDescription != null && selectedSlot != null)
-            {
-                upgradeDescription.SetCurrentItem(selectedSlot);
-                Debug.Log($"BlacksmithShop: Initial item set to {selectedSlot.itemName}");
-            }
+            Debug.LogWarning("BlacksmithShopBehaviour: No item slots found!");
         }
         else
         {
-            Debug.LogWarning("BlacksmithShop: No item slots found!");
+            Debug.Log($"BlacksmithShopBehaviour: Found {itemSlots.Count} item slots");
         }
-
-        Debug.Log($"BlacksmithShop: Found {itemSlots.Count} item slots");
     }
 
-    protected override int GetSlotCount()
-    {
-        return itemSlots?.Count ?? 0;
-    }
+    protected override int GetSlotCount() => itemSlots?.Count ?? 0;
 
-    protected override bool IsValidSlotIndex(int index)
-    {
-        return index >= 0 && index < GetSlotCount();
-    }
+    protected override bool IsValidSlotIndex(int index) => index >= 0 && index < GetSlotCount();
 
     protected override bool IsValidSlot(int index)
     {
         if (!IsValidSlotIndex(index))
-        {
             return false;
-        }
 
         ItemSlot slot = itemSlots[index];
-        if (slot == null)
-        {
-            return false;
-        }
-
-        Transform slotPosition = slot.GetSlotPosition();
-        return slotPosition != null;
+        return slot != null && slot.GetSlotPosition() != null;
     }
 
     protected override void OnSlotSelected(int index)
     {
-        if (slotSelector == null)
-        {
-            Debug.LogError("BlacksmithShop: slotSelector is null!");
-            return;
-        }
-
         if (!IsValidSlot(index))
         {
-            Debug.LogWarning($"BlacksmithShop: slot at index {index} is invalid!");
+            Debug.LogWarning($"BlacksmithShopBehaviour: Invalid slot index {index}");
             return;
         }
 
-        Transform slotPosition = itemSlots[index].GetSlotPosition();
-        slotSelector.rectTransform.position = slotPosition.position;
-        selectedSlot = itemSlots[index].GetItem();
+        ItemSlot slot = itemSlots[index];
+        selectedItem = slot.GetItem();
 
-        if (selectedSlot != null)
+        // Update slot selector visual
+        if (slotSelector != null)
         {
-            if (upgradeDescription != null)
-            {
-                upgradeDescription.SetCurrentItem(selectedSlot);
-                Debug.Log($"BlacksmithShop: Selected item {selectedSlot.itemName}");
-            }
-            else
-            {
-                Debug.LogWarning("BlacksmithShop: UpgradeDescription not assigned!");
-            }
+            Transform slotPosition = slot.GetSlotPosition();
+            slotSelector.rectTransform.position = slotPosition.position;
+        }
 
-            ShopEvents.OnSlotSelected?.Invoke(selectedSlot);
+        // Update description panel
+        if (upgradeDescription != null && selectedItem != null)
+        {
+            upgradeDescription.SetCurrentItem(selectedItem);
+            Debug.Log($"BlacksmithShopBehaviour: Selected {selectedItem.itemName}");
         }
     }
+
+    public ItemBase GetSelectedItem() => selectedItem;
+    public IUpgradeService GetUpgradeService() => upgradeService;
 }

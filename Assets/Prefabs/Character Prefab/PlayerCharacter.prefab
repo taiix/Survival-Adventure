@@ -81,7 +81,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &8313169199531796
 RectTransform:
   m_ObjectHideFlags: 0
@@ -123,7 +123,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: -1
   m_TargetDisplay: 0
 --- !u!114 &4181291498784685573
 MonoBehaviour:
@@ -197,6 +197,8 @@ GameObject:
   - component: {fileID: 6190234677904521854}
   - component: {fileID: 2002485545544264896}
   - component: {fileID: 2800896643649825652}
+  - component: {fileID: 5628839284282404057}
+  - component: {fileID: 4577880441134560891}
   m_Layer: 7
   m_Name: PlayerCharacter
   m_TagString: Untagged
@@ -376,6 +378,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   swordCollider: {fileID: 0}
+  quickAttackVariants: 3
+  quickAttackIndexParam: QuickAttackIndex
+  quickAttackTriggerParam: QuickAttack
 --- !u!114 &6190234677904521854
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -423,6 +428,32 @@ MonoBehaviour:
   attackSpeed: 0
   defense: 0
   maxHealth: 0
+  gold: 100
+--- !u!114 &5628839284282404057
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 559228363669565709}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a702d61c2a1cd8c47a3dddb371a21672, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeManager
+  playerEquipment: {fileID: 2002485545544264896}
+--- !u!114 &4577880441134560891
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 559228363669565709}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f504395b9b9496444a8b693d7be3ee40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InputService
 --- !u!1 &1194505072266876549
 GameObject:
   m_ObjectHideFlags: 0
@@ -1038,7 +1069,7 @@ RectTransform:
   m_Father: {fileID: 2823456491359007921}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0.62049866, y: 3.7412033}
   m_SizeDelta: {x: -15.0301, y: 2.5176}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -1113,7 +1144,7 @@ RectTransform:
   m_Father: {fileID: 3756015410448023736}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0.41350174, y: 0}
   m_SizeDelta: {x: -12.1339, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}

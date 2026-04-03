@@ -3,12 +3,11 @@ using UnityEngine;
 
 public class ShopPlayerStatsUI : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI gold;
+    [SerializeField] private TextMeshProUGUI goldText;
     [SerializeField] private TextMeshProUGUI healthText;
     [SerializeField] private TextMeshProUGUI damageText;
     [SerializeField] private TextMeshProUGUI attackSpeedText;
-    [SerializeField] private TextMeshProUGUI armorText;
-    [SerializeField] private TextMeshProUGUI staminaText;
+    [SerializeField] private TextMeshProUGUI defenseText;
 
     private IPlayerStatsService playerStats;
     private bool isInitialized;
@@ -17,16 +16,7 @@ public class ShopPlayerStatsUI : MonoBehaviour
     {
         if (!isInitialized)
         {
-            playerStats = ServiceLocator.GetPlayerStatsService();
-            
-            if (playerStats == null)
-            {
-                Debug.LogError("ShopPlayerStatsUI: PlayerStatsService not found in ServiceLocator!");
-                return;
-            }
-
-            playerStats.OnGoldChanged.AddListener(UpdateGoldDisplay);
-            isInitialized = true;
+            InitializePlayerStats();
         }
 
         if (playerStats != null)
@@ -40,29 +30,81 @@ public class ShopPlayerStatsUI : MonoBehaviour
         if (playerStats != null && isInitialized)
         {
             playerStats.OnGoldChanged.RemoveListener(UpdateGoldDisplay);
+            playerStats.OnWeaponEquipped.RemoveListener(_ => RefreshAllStats());
+            playerStats.OnArmorEquipped.RemoveListener(_ => RefreshAllStats());
         }
+    }
+
+    private void InitializePlayerStats()
+    {
+        playerStats = ServiceLocator.GetPlayerStatsService();
+
+        if (playerStats == null)
+        {
+            Debug.LogError("ShopPlayerStatsUI: PlayerStatsService not found in ServiceLocator!");
+            return;
+        }
+
+        playerStats.OnGoldChanged.AddListener(UpdateGoldDisplay);
+        playerStats.OnWeaponEquipped.AddListener(_ => RefreshAllStats());
+        playerStats.OnArmorEquipped.AddListener(_ => RefreshAllStats());
+
+        isInitialized = true;
+        Debug.Log("ShopPlayerStatsUI: Initialized successfully");
     }
 
     private void RefreshAllStats()
     {
         if (playerStats == null)
         {
-            Debug.LogWarning("ShopPlayerStatsUI: Cannot refresh stats, PlayerStatsService is null!");
+            Debug.LogWarning("ShopPlayerStatsUI: PlayerStatsService is null!");
             return;
         }
 
-        healthText.text = $"Health: {playerStats.GetMaxHealth()}";
-        damageText.text = $"Damage: {playerStats.GetMinDamage()} - {playerStats.GetMaxDamage()}";
-        attackSpeedText.text = $"Attack Speed: {playerStats.GetAttackSpeed()}";
-        armorText.text = $"Armor: {playerStats.GetDefense()}";
+        UpdateHealthDisplay(playerStats.GetMaxHealth());
+        UpdateDamageDisplay(playerStats.GetMinDamage(), playerStats.GetMaxDamage());
+        UpdateAttackSpeedDisplay(playerStats.GetAttackSpeed());
+        UpdateDefenseDisplay(playerStats.GetDefense());
         UpdateGoldDisplay(playerStats.GetGold());
     }
 
-    private void UpdateGoldDisplay(int currentGold)
+    private void UpdateGoldDisplay(int gold)
     {
-        if (gold != null)
+        if (goldText != null)
         {
-            gold.text = $"Gold: {currentGold}";
+            goldText.text = $"<color=yellow><b>Gold:</b> {gold}</color>";
+        }
+    }
+
+    private void UpdateHealthDisplay(int health)
+    {
+        if (healthText != null)
+        {
+            healthText.text = $"<b>Health:</b> {health}";
+        }
+    }
+
+    private void UpdateDamageDisplay(int minDmg, int maxDmg)
+    {
+        if (damageText != null)
+        {
+            damageText.text = $"<b>Damage:</b> {minDmg} - {maxDmg}";
+        }
+    }
+
+    private void UpdateAttackSpeedDisplay(float speed)
+    {
+        if (attackSpeedText != null)
+        {
+            attackSpeedText.text = $"<b>Attack Speed:</b> {speed:F2}";
+        }
+    }
+
+    private void UpdateDefenseDisplay(int defense)
+    {
+        if (defenseText != null)
+        {
+            defenseText.text = $"<b>Defense:</b> {defense}";
         }
     }
 }
