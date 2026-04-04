@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Events;
 
 /// <summary>
 /// Blacksmith NPC behavior - handles weapon and armor upgrades.

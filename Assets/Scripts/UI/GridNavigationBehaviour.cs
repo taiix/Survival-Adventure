@@ -14,7 +14,7 @@ public abstract class GridNavigationBehaviour : MonoBehaviour
     [SerializeField] protected InputActionReference navigateAction;
 
     protected int currentSlotIndex = -1;
-    private Vector2 previousNavigateInput;
+    protected Vector2 previousNavigateInput;
 
     protected virtual void Awake()
     {
@@ -56,7 +56,7 @@ public abstract class GridNavigationBehaviour : MonoBehaviour
         }
     }
 
-    private void HandleNavigationInput()
+    protected virtual void HandleNavigationInput()
     {
         Vector2 input = navigateAction.action.ReadValue<Vector2>();
 
@@ -118,23 +118,71 @@ public abstract class GridNavigationBehaviour : MonoBehaviour
         {
             currentSlotIndex = targetIndex;
             OnSlotSelected(targetIndex);
+            UpdateSelectorPosition(targetIndex);
         }
     }
 
     protected virtual void SelectFirstValidSlot()
     {
-        for (int i = 0; i < GetSlotCount(); i++)
+        int slotCount = GetSlotCount();
+        
+        if (slotCount == 0)
+        {
+            Debug.LogWarning($"{gameObject.name}: No slots available!");
+            currentSlotIndex = -1;
+            return;
+        }
+
+        for (int i = 0; i < slotCount; i++)
         {
             if (IsValidSlot(i))
             {
                 currentSlotIndex = i;
                 OnSlotSelected(i);
+                UpdateSelectorPosition(i);
+                Debug.Log($"{gameObject.name}: Selected first valid slot at index {i}");
                 return;
             }
         }
 
-        Debug.LogWarning("SelectFirstValidSlot: No valid slots found!");
+        Debug.LogWarning($"{gameObject.name}: No valid slots found! Checked {slotCount} slots.");
         currentSlotIndex = -1;
+    }
+
+    protected virtual void UpdateSelectorPosition(int index)
+    {
+        if (slotSelector == null)
+        {
+            Debug.LogWarning($"{gameObject.name}: slotSelector is null!");
+            return;
+        }
+
+        if (!IsValidSlot(index))
+        {
+            Debug.LogWarning($"{gameObject.name}: Cannot update selector position - slot {index} is invalid!");
+            return;
+        }
+
+        // Get slot position from child class implementation
+        Transform slotPosition = GetSlotPosition(index);
+        
+        if (slotPosition != null)
+        {
+            slotSelector.rectTransform.position = slotPosition.position;
+            Debug.Log($"{gameObject.name}: Updated selector position to {slotPosition.position} for slot {index}");
+        }
+        else
+        {
+            Debug.LogWarning($"{gameObject.name}: Could not get position for slot {index}");
+        }
+    }
+
+    /// <summary>
+    /// Get the transform/position of a slot. Child classes should override this.
+    /// </summary>
+    protected virtual Transform GetSlotPosition(int index)
+    {
+        return null;
     }
 
     protected abstract void RefreshSlots();

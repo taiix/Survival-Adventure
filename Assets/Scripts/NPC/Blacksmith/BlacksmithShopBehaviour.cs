@@ -5,25 +5,69 @@ public class BlacksmithShopBehaviour : GridNavigationBehaviour
 {
     [SerializeField] private List<ItemSlot> itemSlots;
     [SerializeField] private UpgradeDescription upgradeDescription;
+    [SerializeField] private GameObject renderCamera;
 
     private ItemBase selectedItem;
     private IUpgradeService upgradeService;
 
-    private void OnEnable()
+    protected override void OnEnable()
     {
         RefreshSlots();
+        currentSlotIndex = -1;
+        previousNavigateInput = Vector2.zero;
         SelectFirstValidSlot();
+
         upgradeService = ServiceLocator.GetUpgradeService();
 
         if (upgradeService == null)
         {
             Debug.LogWarning("BlacksmithShopBehaviour: UpgradeService not found in ServiceLocator!");
         }
+
+        // Enable navigation input
+        if (navigateAction != null && navigateAction.action != null)
+        {
+            navigateAction.action.Enable();
+        }
     }
 
-    private void OnDisable()
+    protected override void OnDisable()
     {
         selectedItem = null;
+        HideCamera();
+
+        if (navigateAction != null && navigateAction.action != null)
+        {
+            navigateAction.action.Disable();
+        }
+    }
+
+    protected override void Update()
+    {
+        SyncCameraVisibility();
+        base.Update();
+    }
+
+    private void SyncCameraVisibility()
+    {
+        if (renderCamera == null)
+            return;
+
+        bool shouldCameraBeActive = gameObject.activeSelf;
+        bool cameraIsActive = renderCamera.activeSelf;
+
+        if (shouldCameraBeActive != cameraIsActive)
+        {
+            renderCamera.SetActive(shouldCameraBeActive);
+        }
+    }
+
+    private void HideCamera()
+    {
+        if (renderCamera != null)
+        {
+            renderCamera.SetActive(false);
+        }
     }
 
     protected override void RefreshSlots()
@@ -59,7 +103,35 @@ public class BlacksmithShopBehaviour : GridNavigationBehaviour
             return false;
 
         ItemSlot slot = itemSlots[index];
-        return slot != null && slot.GetSlotPosition() != null;
+        return slot != null && GetSlotPosition(index) != null;
+    }
+
+    protected override Transform GetSlotPosition(int index)
+    {
+        if (!IsValidSlotIndex(index))
+        {
+            return null;
+        }
+
+        ItemSlot slot = itemSlots[index];
+        if (slot == null)
+        {
+            return null;
+        }
+
+        Transform slotPosition = slot.GetSlotPosition();
+        
+        if (slotPosition == null)
+        {
+            // Fallback: use the slot's RectTransform directly
+            RectTransform slotRect = slot.GetComponent<RectTransform>();
+            if (slotRect != null)
+            {
+                return slotRect;
+            }
+        }
+        
+        return slotPosition;
     }
 
     protected override void OnSlotSelected(int index)
@@ -72,13 +144,6 @@ public class BlacksmithShopBehaviour : GridNavigationBehaviour
 
         ItemSlot slot = itemSlots[index];
         selectedItem = slot.GetItem();
-
-        // Update slot selector visual
-        if (slotSelector != null)
-        {
-            Transform slotPosition = slot.GetSlotPosition();
-            slotSelector.rectTransform.position = slotPosition.position;
-        }
 
         // Update description panel
         if (upgradeDescription != null && selectedItem != null)

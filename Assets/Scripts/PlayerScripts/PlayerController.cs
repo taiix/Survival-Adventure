@@ -4,9 +4,6 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public sealed class PlayerController : MonoBehaviour
 {
-    [Header("Player State")]
-    [SerializeField] private PlayerState playerState;
-
     [Header("Input Actions")]
     [SerializeField] private InputActionAsset moveAction;
     [SerializeField] private string keyboardActionMapName = "Keyboard";
@@ -116,8 +113,6 @@ public sealed class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        playerState = stateManager.CurrentState;
-
         inputHandler.UpdateInputState();
 
         TickDash(Time.deltaTime);

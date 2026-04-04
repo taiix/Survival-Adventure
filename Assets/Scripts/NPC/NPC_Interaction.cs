@@ -4,7 +4,6 @@ using UnityEngine.Events;
 public class NPC_Interaction : MonoBehaviour, IInteractable
 {
     [SerializeField] private string npcName;
-    [SerializeField] private GameObject renderCamera;
 
     private INPCBehaviour npcBehavior;
     private GameObject uiPanel;
@@ -27,7 +26,6 @@ public class NPC_Interaction : MonoBehaviour, IInteractable
     private void Start()
     {
         InitializeBehavior();
-        InitializeCamera();
     }
 
     private void InitializeBehavior()
@@ -55,30 +53,12 @@ public class NPC_Interaction : MonoBehaviour, IInteractable
         }
     }
 
-    private void InitializeCamera()
-    {
-        if (renderCamera != null)
-        {
-            renderCamera.SetActive(false);
-        }
-    }
-
     private void Update()
     {
-        SyncCameraVisibility();
-
         if (isInteracting)
         {
             npcBehavior?.OnInteractionUpdate();
         }
-    }
-
-    private void SyncCameraVisibility()
-    {
-        if (renderCamera == null || uiPanel == null)
-            return;
-
-        renderCamera.SetActive(uiPanel.activeSelf);
     }
 
     public void OnInteract()
@@ -89,10 +69,7 @@ public class NPC_Interaction : MonoBehaviour, IInteractable
             return;
         }
 
-        Debug.Log($"Interacting with {npcName}");
-
         isInteracting = true;
-
         npcBehavior.OnInteract();
         ShowUI();
 
@@ -104,10 +81,7 @@ public class NPC_Interaction : MonoBehaviour, IInteractable
         if (!isInteracting)
             return;
 
-        Debug.Log($"Ending interaction with {npcName}");
-
         isInteracting = false;
-
         npcBehavior?.OnInteractionEnd();
         HideUI();
 
