@@ -37,6 +37,8 @@ public class KnightBossEnemy : BaseEnemy
     {
         AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
 
+        FailsafeResumeChaseIfStuck(stateInfo);
+
         bool isInQuickAttackAnimation = stateInfo.fullPathHash == runtimeStateHash;
         bool isInSpecialAttackAnimation = stateInfo.fullPathHash == specialAttackStateHash;
 
@@ -79,6 +81,39 @@ public class KnightBossEnemy : BaseEnemy
         else
         {
             HandlePatrolState();
+        }
+    }
+
+    private void FailsafeResumeChaseIfStuck(AnimatorStateInfo stateInfo)
+    {
+        if (navMeshAgent == null || playerTransform == null)
+        {
+            return;
+        }
+
+        // Don't interfere while special is running.
+        if (isSpecialAttackInProgress)
+        {
+            return;
+        }
+
+        // If player is detected and we're not in melee range, we should be chasing.
+        if (!IsPlayerInDetectionRange() || IsPlayerInAttackRange())
+        {
+            return;
+        }
+
+        // If the agent is stopped or has no useful path, kick it back into chase.
+        bool hasNoPath = !navMeshAgent.hasPath || navMeshAgent.pathStatus != UnityEngine.AI.NavMeshPathStatus.PathComplete;
+        bool isNotMoving = navMeshAgent.velocity.sqrMagnitude < 0.01f;
+
+        if (navMeshAgent.isStopped || (hasNoPath && isNotMoving))
+        {
+            currentState = AIState.Chase;
+            navMeshAgent.isStopped = false;
+            navMeshAgent.speed = chasingSpeed;
+            navMeshAgent.ResetPath();
+            navMeshAgent.SetDestination(playerTransform.position);
         }
     }
 
@@ -150,7 +185,10 @@ public class KnightBossEnemy : BaseEnemy
             animator.ResetTrigger(specialAttackTriggerName);
             animator.SetTrigger(specialAttackTriggerName);
 
-            specialAttackChargeFxPrefab.SetActive(true);
+            if (specialAttackChargeFxPrefab != null)
+            {
+                specialAttackChargeFxPrefab.SetActive(true);
+            }
         }
     }
 
@@ -208,7 +246,10 @@ public class KnightBossEnemy : BaseEnemy
             spawn.rotation);
 
         Destroy(fxInstance, specialAttackFxLifetime);
-        specialAttackChargeFxPrefab.SetActive(false);
+        if (specialAttackChargeFxPrefab != null)
+        {
+            specialAttackChargeFxPrefab.SetActive(false);
+        }
     }
 
     protected override void UpdateAnimator()

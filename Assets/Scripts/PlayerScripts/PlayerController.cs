@@ -91,6 +91,7 @@ public sealed class PlayerController : MonoBehaviour
             raycastDistance);
 
         movementController = new PlayerMovementController(
+            this,
             characterController,
             animator,
             transform,
@@ -275,7 +276,15 @@ public sealed class PlayerController : MonoBehaviour
     public InputAction GetInputAction(string actionKey) => inputHandler.GetInputAction(actionKey);
     public PlayerStateManager GetStateManager() => stateManager;
     public PlayerStaminaController GetStaminaController() => staminaController;
-  
+
+    public float GetWalkingSpeed()
+    {
+        return walkSpeed;
+    }
+    public float GetSprintingSpeed()
+    {
+        return sprintSpeed;
+    }
     private void OnDrawGizmosSelected()
     {
         Vector3 p = transform.position + transform.forward * sphereDistance + Vector3.up * sphereYOffset;

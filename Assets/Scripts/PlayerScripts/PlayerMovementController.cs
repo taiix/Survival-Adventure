@@ -4,7 +4,10 @@ public sealed class PlayerMovementController
 {
     private const string inAirBoolName = "InAir";
     private const string verticalSpeedFloatName = "VerticalSpeed";
+    private const string jumpStartTriggerName = "JumpStart";
+    private const string landTriggerName = "Land";
 
+    private readonly PlayerController playerController;
     private readonly CharacterController characterController;
     private readonly Animator animator;
     private readonly PlayerMotor playerMotor;
@@ -19,8 +22,13 @@ public sealed class PlayerMovementController
 
     private bool previousUsingControllerInput;
     private bool previousJumpPressed;
+    private bool previousGrounded;
+
+    private const float jumpGroundedGraceSeconds = 0.08f;
+    private float jumpGroundedGraceTimer;
 
     public PlayerMovementController(
+        PlayerController playerController,
         CharacterController characterController,
         Animator animator,
         Transform playerTransform,
@@ -36,6 +44,7 @@ public sealed class PlayerMovementController
         float sphereRadius,
         float raycastDistance)
     {
+        this.playerController = playerController;
         this.characterController = characterController;
         this.animator = animator;
         this.walkSpeed = walkSpeed;
@@ -48,6 +57,8 @@ public sealed class PlayerMovementController
 
         playerMotor = new PlayerMotor(characterController, playerTransform, turnAngle);
         waterDetection = new PlayerWaterDetection(sphereDistance, sphereYOffset, sphereRadius, raycastDistance);
+
+        previousGrounded = characterController != null && characterController.isGrounded;
     }
 
     public void Update(PlayerInputHandler inputHandler, bool isSprinting, float deltaTime)
@@ -68,8 +79,11 @@ public sealed class PlayerMovementController
             return;
         }
 
-        bool inAir = !playerMotor.IsGrounded;
+        bool grounded = playerMotor.IsGrounded;
+        bool inAir = !grounded || jumpGroundedGraceTimer > 0f;
+
         animator.SetBool(inAirBoolName, inAir);
+        animator.SetFloat(verticalSpeedFloatName, playerMotor.VerticalVelocity);
     }
 
     public void Idle()
@@ -101,10 +115,10 @@ public sealed class PlayerMovementController
 
         bool jumpPressedThisFrame = inputHandler.IsJumping && !previousJumpPressed;
 
+        bool wasGroundedBeforeMove = playerMotor.IsGrounded;
+
         if (!waterDetection.IsDetectingWater(characterController.transform))
         {
-            bool wasGrounded = playerMotor.IsGrounded;
-
             playerMotor.Move(
                 inputHandler.MoveInput,
                 moveSpeed,
@@ -112,11 +126,34 @@ public sealed class PlayerMovementController
                 deltaTime,
                 jumpPressedThisFrame,
                 jumpHeight);
-
-            // Fire the trigger only when we just left the ground due to a jump input.
-            bool isNowInAir = !playerMotor.IsGrounded;
         }
 
+        bool isGroundedAfterMove = playerMotor.IsGrounded;
+
+        // Jump start: only when jump input pressed AND we actually left the ground.
+        if (animator != null && jumpPressedThisFrame && wasGroundedBeforeMove && !isGroundedAfterMove)
+        {
+            jumpGroundedGraceTimer = jumpGroundedGraceSeconds;
+
+            animator.ResetTrigger(jumpStartTriggerName);
+            animator.SetTrigger(jumpStartTriggerName);
+        }
+        else
+        {
+            if (jumpGroundedGraceTimer > 0f)
+            {
+                jumpGroundedGraceTimer -= deltaTime;
+            }
+        }
+
+        // Land: only when we were in air and become grounded.
+        if (animator != null && !previousGrounded && isGroundedAfterMove)
+        {
+            animator.ResetTrigger(landTriggerName);
+            animator.SetTrigger(landTriggerName);
+        }
+
+        previousGrounded = isGroundedAfterMove;
         previousJumpPressed = inputHandler.IsJumping;
 
         if (inputHandler.UsingControllerInput)
@@ -152,5 +189,28 @@ public sealed class PlayerMovementController
             : 0f;
 
         animator.SetFloat("Speed", normalizedSpeed);
+
+        // Don't scale playback speed while airborne (prevents JumpStart/InAir/Land issues).
+        if (animator.GetBool(inAirBoolName))
+        {
+            animator.speed = 1f;
+            return;
+        }
+
+        float targetMoveSpeed = isSprinting ? sprintSpeed : walkSpeed;
+
+        if (inputAmount <= 0.01f || targetMoveSpeed <= 0.01f)
+        {
+            animator.speed = 1f;
+            return;
+        }
+
+        float referenceWalkSpeed = playerController.GetWalkingSpeed();
+        float referenceSprintSpeed = playerController.GetSprintingSpeed();
+
+        float reference = isSprinting ? referenceSprintSpeed : referenceWalkSpeed;
+        float playback = (targetMoveSpeed / reference);
+
+        animator.speed = Mathf.Clamp(playback, 0.75f, 1.5f);
     }
 }
