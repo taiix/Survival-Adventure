@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c45cb0bfa3c635948acafdddb0f7c704, type: 3}
+  m_Name: City
+  m_EditorClassIdentifier: Assembly-CSharp::WorldSettings_SO
+  landObjects:
+  - {fileID: 7302039158908338046, guid: 05a1bbc73b13a7e4fb2af62bee334163, type: 3}
+  grassObjects:
+  - {fileID: 4730732336790718834, guid: 0c59b964c91e24e4c9da58ae6d74154d, type: 3}
+  - {fileID: 4286965306941488240, guid: d1b10775c3a4a3c4892902382c076d79, type: 3}
+  - {fileID: 9114811497250240060, guid: 618423af5ef3b6548b46eb04c48b0b8e, type: 3}
+  treeObjects:
+  - {fileID: 8083864369070550718, guid: 380e8044710c10b4788a4cd3c964de31, type: 3}
+  - {fileID: 1063108045758694179, guid: 538b1f8e31a3ccf4db379f2b0ce71552, type: 3}
+  - {fileID: 6412093417938909595, guid: c1e60d32af587a3469017e240e522872, type: 3}
+  - {fileID: 4327009473302940671, guid: c7915bf4e58c9074a9644a042721d190, type: 3}
+  - {fileID: 7680870308377049550, guid: 47c8bdae6e6127040a89e9eff715032d, type: 3}
+  - {fileID: 8611197126703537214, guid: d58cb15f737c8e6478c04808d395adba, type: 3}
+  - {fileID: 6265745587019831976, guid: c6ac516007bc1e941b0a2d0c592e91ca, type: 3}
+  - {fileID: 7417007139581448563, guid: 13410ad855b0f9240b08127d61481470, type: 3}
+  - {fileID: 5778291182843081442, guid: 64a4742846ba681459ae69d43f6edea0, type: 3}
+  topObjects:
+  - {fileID: 919132149155446097, guid: 9b424d7740292b24484f47f2eca9405e, type: 3}
+  worldWidth: 29
+  worldHeight: 23
+  tileSize: 0.9
+  generateOnStart: 1
+  seed: 7450
+  noiseScale: 10
+  lowThreshold: 0.311
+  highThreshold: 0.788
+  grassChance: 1
+  treeChance: 0
+  topChance: 0
+  landYOffset: 0
+  grassYOffset: 0.5
+  treeYOffset: 0.5
+  topYOffset: 0.5
+  grassTileOffset: 0.35
+  treeTileOffset: 0.25

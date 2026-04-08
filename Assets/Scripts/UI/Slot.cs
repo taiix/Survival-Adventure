@@ -16,22 +16,11 @@ public class Slot : MonoBehaviour
     {
         if (sprite == null)
         {
-            // Try to find Image component on this GameObject first
             sprite = GetComponent<Image>();
             
-            // If not found, try to find it on the first child
             if (sprite == null && transform.childCount > 0)
             {
                 sprite = transform.GetChild(0).GetComponent<Image>();
-            }
-            
-            if (sprite != null)
-            {
-                Debug.Log($"Slot.OnEnable: Found Image component on {gameObject.name}");
-            }
-            else
-            {
-                Debug.LogWarning($"Slot.OnEnable: Could not find Image component on {gameObject.name} or its first child!");
             }
         }
     }

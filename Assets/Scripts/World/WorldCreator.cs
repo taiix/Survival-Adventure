@@ -3,48 +3,71 @@ using UnityEngine;
 
 public class WorldCreator : MonoBehaviour
 {
-    [SerializeField] private GameObject[] landObjects;
-    [SerializeField] private GameObject[] grassObjects;
-    [SerializeField] private GameObject[] treeObjects;
-    [SerializeField] private GameObject[] topObjects;
+    public WorldSettings_SO worldSettings;
+    private GameObject[] landObjects;
+    private GameObject[] grassObjects;
+    private GameObject[] treeObjects;
+    private GameObject[] topObjects;
 
     [Header("World Settings")]
-    [SerializeField, Min(1)] private int worldWidth = 32;
-    [SerializeField, Min(1)] private int worldHeight = 32;
-    [SerializeField, Min(0.1f)] private float tileSize = 1f;
-    [SerializeField] private bool generateOnStart = true;
-    [SerializeField] private int seed = 12345;
-    [SerializeField, Min(0.01f)] private float noiseScale = 10f;
-    [Space]
-    [SerializeField, Range(0f, 1f)] private float lowThreshold = 0.35f;
-    [SerializeField, Range(0f, 1f)] private float highThreshold = 0.75f;
-    [Space]
-    [SerializeField, Range(0f, 1f)] private float grassChance = 0.35f;
-    [SerializeField, Range(0f, 1f)] private float treeChance = 0.15f;
-    [SerializeField, Range(0f, 1f)] private float topChance = 0.08f;
+    private int worldWidth = 32;
+    private int worldHeight = 32;
+    private float tileSize = 1f;
+    private bool generateOnStart = true;
+    private int seed = 12345;
+    private float noiseScale = 10f;
+    private float lowThreshold = 0.35f;
+    private float highThreshold = 0.75f;
+
+    private float grassChance = 0.35f;
+    private float treeChance = 0.15f;
+    private float topChance = 0.08f;
 
     [Header("Spawn Offsets")]
-    [SerializeField, Min(0f)] private float landYOffset = 0f;
-    [SerializeField, Min(0f)] private float grassYOffset = 0.05f;
-    [SerializeField, Min(0f)] private float treeYOffset = 0.5f;
-    [SerializeField, Min(0f)] private float topYOffset = 0.5f;
-    [SerializeField, Min(0f)] private float grassTileOffset = 0.35f;
-    [SerializeField, Min(0f)] private float treeTileOffset = 0.25f;
+    private float landYOffset = 0f;
+    private float grassYOffset = 0.05f;
+    private float treeYOffset = 0.5f;
+    private float topYOffset = 0.5f;
+    private float grassTileOffset = 0.35f;
+    private float treeTileOffset = 0.25f;
 
     [Header("World Parents")]
-    [SerializeField] private Transform landParent;
-    [SerializeField] private Transform grassParent;
-    [SerializeField] private Transform treeParent;
-    [SerializeField] private Transform topParent;
+    private Transform landParent;
+    private Transform grassParent;
+    private Transform treeParent;
+    private Transform topParent;
 
     private readonly HashSet<Vector2Int> occupiedDecorativeCells = new HashSet<Vector2Int>();
 
     private void Start()
     {
+        InitializeSettings();
         if (generateOnStart)
         {
             Generate();
         }
+    }
+    private void InitializeSettings()
+    {
+        landObjects = worldSettings != null ? worldSettings.GetLandObjects() : null;
+        grassObjects = worldSettings != null ? worldSettings.GetGrassObjects() : null;
+        treeObjects = worldSettings != null ? worldSettings.GetTreeObjects() : null;
+        topObjects = worldSettings != null ? worldSettings.GetTopObjects() : null;
+        worldWidth = worldSettings != null ? worldSettings.worldWidth : worldWidth;
+        worldHeight = worldSettings != null ? worldSettings.worldHeight : worldHeight;
+        tileSize = worldSettings != null ? worldSettings.tileSize : tileSize;
+        seed = worldSettings != null ? worldSettings.seed : seed;
+        noiseScale = worldSettings != null ? worldSettings.noiseScale : noiseScale;
+        lowThreshold = worldSettings != null ? worldSettings.lowThreshold : lowThreshold;
+        highThreshold = worldSettings != null ? worldSettings.highThreshold : highThreshold;
+        treeChance = worldSettings != null ? worldSettings.treeChance : treeChance;
+        topChance = worldSettings != null ? worldSettings.topChance : topChance;
+        landYOffset = worldSettings != null ? worldSettings.landYOffset : landYOffset;
+        grassYOffset = worldSettings != null ? worldSettings.grassYOffset : grassYOffset;
+        treeYOffset = worldSettings != null ? worldSettings.treeYOffset : treeYOffset;
+        topYOffset = worldSettings != null ? worldSettings.topYOffset : topYOffset;
+        grassTileOffset = worldSettings != null ? worldSettings.grassTileOffset : grassTileOffset;
+        treeTileOffset = worldSettings != null ? worldSettings.treeTileOffset : treeTileOffset;
     }
 
     public void Generate()
@@ -56,6 +79,7 @@ public class WorldCreator : MonoBehaviour
     [ContextMenu("Generate World")]
     public void GenerateWorld()
     {
+        InitializeSettings();
         Random.InitState(seed);
 
         EnsureParents();
